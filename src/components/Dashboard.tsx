@@ -5,13 +5,15 @@ import { Receipt } from '@/types';
 import { SupabaseService } from '@/services/supabaseService';
 import { differenceInDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatDateForDisplay } from '@/utils/dateUtils';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function Dashboard() {
     const allItems = receipts.flatMap(receipt => 
       receipt.items.map(item => ({
         ...item,
+        receiptId: receipt.id,
         store: receipt.store,
         receiptDate: receipt.date
       }))
@@ -50,6 +53,37 @@ export default function Dashboard() {
       differenceInDays(new Date(a.estimatedExpiryDate), new Date()) -
       differenceInDays(new Date(b.estimatedExpiryDate), new Date())
     );
+  };
+
+  const handleClearExpiredItems = async () => {
+    try {
+      const expiredItems = getExpiringItems().filter(item => 
+        differenceInDays(new Date(item.estimatedExpiryDate), new Date()) < 0
+      );
+      
+      if (expiredItems.length === 0) {
+        toast.error('No expired items to clear');
+        return;
+      }
+
+      setIsClearing(true);
+
+      console.log('Clearing expired items:', expiredItems);
+
+      for (const item of expiredItems) {
+        await SupabaseService.deleteReceiptItem(item.id);
+        console.log(`Deleted item: ${item.id}`);
+      }
+
+      await loadReceipts();
+      
+      toast.success(`Cleared ${expiredItems.length} expired items`);
+    } catch (error) {
+      console.error('Error clearing expired items:', error);
+      toast.error('Failed to clear expired items');
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   if (loading) {
@@ -63,25 +97,16 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Welcome back, {user?.email?.split('@')[0]}
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Track and manage your food expiry dates
-            </p>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </button>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.email?.split('@')[0]}
+          </h2>
+          <p className="text-gray-600 mt-1">
+            Track and manage your food expiry dates
+          </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           <div className="bg-orange-50 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-orange-900 mb-2">
               Expiring Soon
@@ -113,62 +138,47 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-xl font-semibold mb-4">Items Expiring Soon</h3>
-          <div className="space-y-4">
-            {getExpiringItems().map(item => (
-              <div
-                key={item.id}
-                className="border-b border-gray-100 pb-4 last:border-0"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-sm text-gray-500">
-                      From {item.store}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}
-                  >
-                    {getExpiryText(item.estimatedExpiryDate)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold">Items Expiring Soon</h3>
+          <button
+            onClick={handleClearExpiredItems}
+            disabled={isClearing || loading}
+            className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              isClearing || loading
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100'
+            }`}
+          >
+            <Trash2 className={`w-4 h-4 mr-1.5 ${isClearing ? 'animate-pulse' : ''}`} />
+            {isClearing ? 'Clearing...' : 'Clear Expired'}
+          </button>
         </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-xl font-semibold mb-4">Recent Receipts</h3>
-          <div className="space-y-4">
-            {receipts.map(receipt => (
-              <div
-                key={receipt.id}
-                className="border-b border-gray-100 pb-4 last:border-0"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <h4 className="font-medium text-gray-900">{receipt.store}</h4>
-                    <p className="text-sm text-gray-500">
-                      {formatDateForDisplay(receipt.date)}
-                    </p>
-                  </div>
-                  <p className="font-medium text-gray-900">
-                    €{receipt.total.toFixed(2)}
+        <div className="space-y-4">
+          {getExpiringItems().map(item => (
+            <div
+              key={item.id}
+              className="border-b border-gray-100 pb-4 last:border-0"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-medium text-gray-900">{item.name}</p>
+                  <p className="text-sm text-gray-500">
+                    From {item.store}
                   </p>
                 </div>
-                <p className="text-sm text-gray-600">
-                  {receipt.items.length} items
-                </p>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-green-100 text-green-800'
+                  }`}
+                >
+                  {getExpiryText(item.estimatedExpiryDate)}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

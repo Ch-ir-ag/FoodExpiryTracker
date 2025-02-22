@@ -149,4 +149,37 @@ export class SupabaseService {
       return [];
     }
   }
+
+  static async deleteReceipt(receiptId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('receipts')
+        .delete()
+        .eq('id', receiptId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting receipt:', error);
+      throw error;
+    }
+  }
+
+  static async deleteReceiptItem(itemId: string): Promise<void> {
+    try {
+      console.log('Deleting item with ID:', itemId);
+      const { error } = await supabase
+        .from('receipt_items')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Error in deleteReceiptItem:', error);
+        throw error;
+      }
+      console.log('Successfully deleted item:', itemId);
+    } catch (error) {
+      console.error('Error deleting receipt item:', error);
+      throw error;
+    }
+  }
 } 
