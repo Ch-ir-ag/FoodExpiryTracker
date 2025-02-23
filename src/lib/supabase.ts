@@ -1,8 +1,10 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let supabase: SupabaseClient | null = null;
+let supabaseInstance: SupabaseClient | null = null;
 
-try {
+export function getSupabase(): SupabaseClient {
+  if (supabaseInstance) return supabaseInstance;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -23,12 +25,10 @@ try {
     );
   }
 
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
   console.log('Supabase client initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize Supabase client:', error);
-  // Provide a dummy client or null for SSG
-  supabase = null;
+  return supabaseInstance;
 }
 
-export { supabase }; 
+// For backward compatibility
+export const supabase = typeof window !== 'undefined' ? getSupabase() : null; 

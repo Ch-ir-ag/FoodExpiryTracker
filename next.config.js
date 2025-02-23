@@ -5,6 +5,9 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   staticPageGenerationTimeout: 1000,
+  experimental: {
+    esmExternals: true
+  }
 }
 
 module.exports = nextConfig 
