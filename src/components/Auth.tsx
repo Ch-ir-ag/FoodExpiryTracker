@@ -19,6 +19,10 @@ export default function Auth() {
     setError(null);
 
     try {
+      if (!supabase) {
+        throw new Error('Unable to connect to authentication service');
+      }
+
       if (isSignUp) {
         if (pilotCode !== 'PILOT') {
           throw new Error('Invalid pilot code. Please try again.');
