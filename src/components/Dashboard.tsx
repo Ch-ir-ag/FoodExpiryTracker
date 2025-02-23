@@ -5,7 +5,7 @@ import { Receipt } from '@/types';
 import { SupabaseService } from '@/services/supabaseService';
 import { differenceInDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
-import { Trash2, Upload } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import toast from 'react-hot-toast';
@@ -26,10 +26,6 @@ export default function Dashboard() {
     const receipts = await SupabaseService.getReceipts();
     setReceipts(receipts);
     setLoading(false);
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
   };
 
   const getExpiryText = (expiryDate: string) => {

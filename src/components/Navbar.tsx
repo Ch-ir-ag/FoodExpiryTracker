@@ -1,14 +1,11 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 export default function Navbar() {
   const { user } = useAuth();
-  const pathname = usePathname();
   
   const handleSignOut = async () => {
     await supabase.auth.signOut();

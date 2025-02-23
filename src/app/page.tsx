@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
-import Link from 'next/link';
 import Dashboard from '@/components/Dashboard';
 
 // Stats can be manually edited here

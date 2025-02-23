@@ -46,7 +46,7 @@ export class ReceiptProcessor {
       for (const line of lines) {
         const itemMatch = line.match(/^(.+?)\s+([\d.]+)\s+[ABC]$/);
         if (itemMatch) {
-          const [_, name, price] = itemMatch;
+          const [, name, price] = itemMatch;
           const parsedPrice = parseFloat(price);
           if (isNaN(parsedPrice)) {
             console.warn(`Invalid price for item: ${name}`);

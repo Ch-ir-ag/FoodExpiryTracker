@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Receipt, ReceiptItem } from '@/types';
+import { Receipt } from '@/types';
 import { formatDateForDB } from '@/utils/dateUtils';
 
 export class SupabaseService {
@@ -95,15 +95,8 @@ export class SupabaseService {
       }
 
       return receiptData.id;
-    } catch (error: any) {
-      // Log the full error object
-      console.error('Full error object:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        stack: error.stack
-      });
+    } catch (error: Error) {
+      console.error('Error saving receipt:', error);
       throw error;
     }
   }
@@ -177,7 +170,7 @@ export class SupabaseService {
         throw error;
       }
       console.log('Successfully deleted item:', itemId);
-    } catch (error) {
+    } catch (error: Error) {
       console.error('Error deleting receipt item:', error);
       throw error;
     }

@@ -21,7 +21,7 @@ export default function WaitlistForm({ onSwitchToPilot }: Props) {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       toast.success('Added to waitlist! We\'ll notify you when spots open up.');
       setEmail('');
-    } catch (error) {
+    } catch {
       toast.error('Failed to join waitlist. Please try again.');
     } finally {
       setLoading(false);
