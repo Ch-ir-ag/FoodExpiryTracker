@@ -14,8 +14,8 @@ export interface ReceiptItem {
   quantity: number;
   purchaseDate: string;
   estimatedExpiryDate: string;
-  category?: string;
-  vatRate?: number;
+  category?: string | null;
+  vatRate?: number | null;
 }
 
 export interface ShelfLife {

@@ -60,7 +60,7 @@ export class ReceiptProcessor {
             quantity: 1,
             purchaseDate: date,
             estimatedExpiryDate: this.estimateExpiryDate(name, date),
-            vatRate: null,
+            vatRate: null as number | null,
             category: null
           });
         }
