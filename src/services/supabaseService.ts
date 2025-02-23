@@ -15,6 +15,10 @@ interface DatabaseReceiptItem {
 
 export class SupabaseService {
   static async saveReceipt(receipt: Receipt): Promise<string | null> {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       // Get the current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -113,6 +117,10 @@ export class SupabaseService {
   }
 
   static async getReceipts(): Promise<Receipt[]> {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
@@ -155,6 +163,10 @@ export class SupabaseService {
   }
 
   static async deleteReceipt(receiptId: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       const { error } = await supabase
         .from('receipts')
@@ -169,6 +181,10 @@ export class SupabaseService {
   }
 
   static async deleteReceiptItem(itemId: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
     try {
       console.log('Deleting item with ID:', itemId);
       const { error } = await supabase
