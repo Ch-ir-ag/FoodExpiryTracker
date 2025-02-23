@@ -2,6 +2,17 @@ import { supabase } from '@/lib/supabase';
 import { Receipt } from '@/types';
 import { formatDateForDB } from '@/utils/dateUtils';
 
+interface DatabaseReceiptItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  purchase_date: string;
+  estimated_expiry_date: string;
+  category: string | null;
+  vat_rate: number | null;
+}
+
 export class SupabaseService {
   static async saveReceipt(receipt: Receipt): Promise<string | null> {
     try {
@@ -115,7 +126,7 @@ export class SupabaseService {
           *,
           items:receipt_items(*)
         `)
-        .eq('user_id', user.id)  // Only get receipts for the current user
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
       if (receiptsError) throw receiptsError;
@@ -126,7 +137,7 @@ export class SupabaseService {
         date: receipt.date,
         total: receipt.total,
         rawText: receipt.raw_text,
-        items: receipt.items.map((item: any) => ({
+        items: receipt.items.map((item: DatabaseReceiptItem) => ({
           id: item.id,
           name: item.name,
           price: item.price,
