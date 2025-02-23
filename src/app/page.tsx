@@ -3,11 +3,12 @@
 import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Link from 'next/link';
+import Dashboard from '@/components/Dashboard';
 
 // Stats can be manually edited here
 const STATS = {
-  users: 125,  // Edit this number to update total users
-  pilots: 5    // Edit this number to update active pilots
+  users: 0,  // Edit this number to update total users
+  pilots: 0    // Edit this number to update active pilots
 };
 
 export default function Home() {
@@ -22,23 +23,7 @@ export default function Home() {
   }
 
   if (user) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 pt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Welcome to Food Tracker
-            </h1>
-            <Link 
-              href="/dashboard"
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg font-medium transition-colors"
-            >
-              Go to Dashboard
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
+    return <Dashboard />;
   }
 
   return (
@@ -116,7 +101,7 @@ export default function Home() {
       <div className="relative bg-gradient-to-b from-gray-50/50 to-blue-50/50 py-16 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-indigo-50/30" />
-        <div className="absolute -top-20 right-0 w-72 h-72 bg-blue-200 rounded-full filter blur-3xl opacity-10" />
+        <div className="absolute -top-40 right-0 w-72 h-72 bg-blue-200 rounded-full filter blur-3xl opacity-10" />
         <div className="absolute -bottom-24 left-0 w-96 h-96 bg-indigo-200 rounded-full filter blur-3xl opacity-10" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
