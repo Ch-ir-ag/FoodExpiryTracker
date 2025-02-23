@@ -7,8 +7,8 @@ import { supabase } from '@/lib/supabase';
 
 // Stats can be manually edited here
 const STATS = {
-  users: 0,  // Edit this number to update total users
-  pilots: 0    // Edit this number to update active pilots
+  users: 15,  // Edit this number to update total users
+  pilots: 2    // Edit this number to update active pilots
 };
 
 export default function Home() {
