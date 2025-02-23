@@ -7,7 +7,8 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [pilotCode, setPilotCode] = useState('');
+  const [isSignUp, setIsSignUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -17,9 +18,18 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
+        if (pilotCode !== 'PILOT') {
+          throw new Error('Invalid pilot code. Please purchase a subscription to continue.');
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              is_pilot: true
+            }
+          }
         });
         if (error) throw error;
       } else {
@@ -37,52 +47,75 @@ export default function Auth() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        {isSignUp ? 'Create Account' : 'Sign In'}
+    <div className="relative z-10">
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8">
+        Get Started
       </h2>
       
-      <form onSubmit={handleAuth} className="space-y-4">
+      <form onSubmit={handleAuth} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label htmlFor="email" className="block text-base text-gray-700 mb-2">
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-4 py-3 rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
             required
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
+          <label htmlFor="password" className="block text-base text-gray-700 mb-2">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
             required
           />
         </div>
 
+        {isSignUp && (
+          <div>
+            <label htmlFor="pilotCode" className="block text-base text-gray-700 mb-2">
+              Pilot Code or Purchase
+            </label>
+            <input
+              id="pilotCode"
+              type="text"
+              value={pilotCode}
+              onChange={(e) => setPilotCode(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+              placeholder="Enter pilot code"
+              required
+            />
+          </div>
+        )}
+
         {error && (
-          <div className="text-red-500 text-sm">{error}</div>
+          <div className="text-red-500 text-sm py-2">{error}</div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+          {loading ? 'Processing...' : 'Sign Up'}
         </button>
 
         <button
           type="button"
           onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full text-sm text-blue-600 hover:text-blue-500"
+          className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium"
         >
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          Already have an account? Sign in
         </button>
       </form>
     </div>
