@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Dashboard from '@/components/Dashboard';
+import { supabase } from '@/lib/supabase';
 
 // Stats can be manually edited here
 const STATS = {
@@ -12,6 +13,11 @@ const STATS = {
 
 export default function Home() {
   const { user, loading } = useAuth();
+
+  // Add check for Supabase availability
+  if (!supabase) {
+    return null; // or some fallback UI
+  }
 
   if (loading) {
     return (

@@ -8,6 +8,7 @@ export default function Navbar() {
   const { user } = useAuth();
   
   const handleSignOut = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
   };
 
