@@ -41,8 +41,12 @@ export default function Auth() {
         });
         if (error) throw error;
       }
-    } catch (error: Error) {
-      setError(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }

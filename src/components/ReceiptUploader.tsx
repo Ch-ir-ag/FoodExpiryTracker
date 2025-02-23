@@ -35,15 +35,18 @@ export default function ReceiptUploader() {
       try {
         await SupabaseService.saveReceipt(processedReceipt);
         setReceipt(processedReceipt);
-      } catch (saveError: Error) {
+      } catch (saveError: unknown) {
         console.error('Save error:', saveError);
-        setSaveError(saveError.message || 'Failed to save receipt');
-        // Still show the processed receipt even if save failed
+        setSaveError(
+          saveError instanceof Error ? saveError.message : 'Failed to save receipt'
+        );
         setReceipt(processedReceipt);
       }
-    } catch (error: Error) {
+    } catch (error: unknown) {
       console.error('Processing error:', error);
-      setSaveError(error.message || 'Error processing receipt');
+      setSaveError(
+        error instanceof Error ? error.message : 'Error processing receipt'
+      );
     } finally {
       setIsProcessing(false);
     }

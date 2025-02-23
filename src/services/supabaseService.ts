@@ -106,7 +106,7 @@ export class SupabaseService {
       }
 
       return receiptData.id;
-    } catch (error: Error) {
+    } catch (error: unknown) {
       console.error('Error saving receipt:', error);
       throw error;
     }
@@ -181,7 +181,7 @@ export class SupabaseService {
         throw error;
       }
       console.log('Successfully deleted item:', itemId);
-    } catch (error: Error) {
+    } catch (error: unknown) {
       console.error('Error deleting receipt item:', error);
       throw error;
     }
