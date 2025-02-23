@@ -14,15 +14,23 @@ const STATS = {
 export default function Home() {
   const { user, loading } = useAuth();
 
-  // Add check for Supabase availability
-  if (!supabase) {
-    return null; // or some fallback UI
-  }
-
+  // Show a simple loading state while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Handle case where Supabase isn't initialized
+  if (!supabase) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800">Unable to connect to service</h1>
+          <p className="text-gray-600 mt-2">Please try refreshing the page</p>
+        </div>
       </div>
     );
   }
