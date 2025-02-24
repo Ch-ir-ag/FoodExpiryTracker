@@ -168,29 +168,73 @@ export class SupabaseService {
     }
 
     try {
-      // First delete all receipt items
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Authentication error');
+      }
+
+      // Use RPC (stored procedure) to delete receipt and its items
+      const { error } = await supabase.rpc('delete_receipt_with_items', {
+        receipt_id: receiptId,
+        user_id: user.id
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in deleteReceipt:', error);
+      throw error;
+    }
+  }
+
+  static async deleteAllReceipts(): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    try {
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Authentication error');
+      }
+
+      // Get all receipts for this user
+      const { data: receipts } = await supabase
+        .from('receipts')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (!receipts?.length) {
+        return; // No receipts to delete
+      }
+
+      // Delete all receipt items first
       const { error: itemsError } = await supabase
         .from('receipt_items')
         .delete()
-        .eq('receipt_id', receiptId);
+        .in('receipt_id', receipts.map(r => r.id));
 
       if (itemsError) {
         console.error('Error deleting receipt items:', itemsError);
         throw itemsError;
       }
 
-      // Then delete the receipt
-      const { error: receiptError } = await supabase
+      // Then delete all receipts
+      const { error: receiptsError } = await supabase
         .from('receipts')
         .delete()
-        .eq('id', receiptId);
+        .eq('user_id', user.id);
 
-      if (receiptError) {
-        console.error('Error deleting receipt:', receiptError);
-        throw receiptError;
+      if (receiptsError) {
+        console.error('Error deleting receipts:', receiptsError);
+        throw receiptsError;
       }
+
     } catch (error) {
-      console.error('Error in deleteReceipt:', error);
+      console.error('Error in deleteAllReceipts:', error);
       throw error;
     }
   }

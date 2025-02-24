@@ -6,8 +6,10 @@ import { SupabaseService } from '@/services/supabaseService';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function ReceiptsPage() {
+  const router = useRouter();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
@@ -18,9 +20,15 @@ export default function ReceiptsPage() {
 
   const loadReceipts = async () => {
     setLoading(true);
-    const receipts = await SupabaseService.getReceipts();
-    setReceipts(receipts);
-    setLoading(false);
+    try {
+      const receipts = await SupabaseService.getReceipts();
+      setReceipts(receipts);
+    } catch (error) {
+      console.error('Error loading receipts:', error);
+      toast.error('Failed to load receipts');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteReceipt = async (receiptId: string) => {
@@ -30,7 +38,7 @@ export default function ReceiptsPage() {
     
     try {
       await SupabaseService.deleteReceipt(receiptId);
-      setReceipts(receipts.filter(r => r.id !== receiptId));
+      await loadReceipts();
       toast.success('Receipt deleted successfully');
     } catch (error) {
       console.error('Error deleting receipt:', error);
@@ -45,23 +53,15 @@ export default function ReceiptsPage() {
 
     setIsClearing(true);
     try {
-      // Create a copy of receipts for deletion
-      const receiptsToDelete = [...receipts];
-      
-      // Delete each receipt and log the process
-      for (const receipt of receiptsToDelete) {
-        console.log('Deleting receipt:', receipt.id);
-        await SupabaseService.deleteReceipt(receipt.id);
-      }
-
-      // Clear local state
-      setReceipts([]);
+      await SupabaseService.deleteAllReceipts();
+      await loadReceipts(); // First update the local state
       toast.success('All receipts cleared successfully');
+      // Then force a full refresh
+      window.location.reload();
     } catch (error) {
       console.error('Error clearing receipts:', error);
-      // Refresh the list to ensure UI is in sync with database
-      await loadReceipts();
       toast.error('Failed to clear receipts');
+      await loadReceipts(); // Refresh the list in case of partial deletion
     } finally {
       setIsClearing(false);
     }

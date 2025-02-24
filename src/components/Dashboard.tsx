@@ -19,13 +19,24 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadReceipts();
+    
+    // Refresh receipts every 30 seconds
+    const interval = setInterval(loadReceipts, 30000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   const loadReceipts = async () => {
-    setLoading(true);
-    const receipts = await SupabaseService.getReceipts();
-    setReceipts(receipts);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const receipts = await SupabaseService.getReceipts();
+      setReceipts(receipts);
+    } catch (error) {
+      console.error('Error loading receipts:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getExpiryText = (expiryDate: string) => {
@@ -92,17 +103,16 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="relative overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-50" />
-        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-blue-100 to-transparent -z-10" />
-        <div className="absolute top-20 left-0 w-72 h-72 bg-blue-200 rounded-full filter blur-3xl opacity-20 -z-10" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200 rounded-full filter blur-3xl opacity-20 -z-10" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
-          {/* Welcome Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8">
+    <main className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 animate-gradient-slow">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative">
+          {/* Add a subtle floating blob in the background */}
+          <div className="absolute -top-20 -right-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+          
+          {/* Main content with glassmorphism */}
+          <div className="relative bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl p-8">
+            {/* Welcome Section */}
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -114,95 +124,106 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="bg-orange-50 rounded-xl p-6 transition-all hover:shadow-md">
-                <h3 className="text-lg font-semibold text-orange-900 mb-2">
-                  Expiring Soon
-                </h3>
-                <p className="text-3xl font-bold text-orange-600">
-                  {getExpiringItems().filter(item => 
-                    differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
-                  ).length}
-                </p>
-                <p className="text-orange-600/75 text-sm">items</p>
+            <div className="space-y-8">
+              {/* Stats Section */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 transition-all hover:shadow-md hover:scale-[1.02]">
+                  <h3 className="text-lg font-semibold text-orange-900 mb-2">
+                    Expiring Soon
+                  </h3>
+                  <p className="text-3xl font-bold text-orange-600">
+                    {getExpiringItems().filter(item => 
+                      differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3 &&
+                      differenceInDays(new Date(item.estimatedExpiryDate), new Date()) >= 0
+                    ).length}
+                  </p>
+                  <p className="text-orange-600/75 text-sm">items</p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 transition-all hover:shadow-md hover:scale-[1.02]">
+                  <h3 className="text-lg font-semibold text-green-900 mb-2">
+                    Fresh Items
+                  </h3>
+                  <p className="text-3xl font-bold text-green-600">
+                    {getExpiringItems().filter(item => 
+                      differenceInDays(new Date(item.estimatedExpiryDate), new Date()) > 3
+                    ).length}
+                  </p>
+                  <p className="text-green-600/75 text-sm">items</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 transition-all hover:shadow-md hover:scale-[1.02]">
+                  <h3 className="text-lg font-semibold text-red-900 mb-2">
+                    Expired
+                  </h3>
+                  <p className="text-3xl font-bold text-red-600">
+                    {getExpiringItems().filter(item => 
+                      differenceInDays(new Date(item.estimatedExpiryDate), new Date()) < 0
+                    ).length}
+                  </p>
+                  <p className="text-red-600/75 text-sm">items</p>
+                </div>
               </div>
-              
-              <div className="bg-green-50 rounded-xl p-6 transition-all hover:shadow-md">
-                <h3 className="text-lg font-semibold text-green-900 mb-2">
-                  Fresh Items
-                </h3>
-                <p className="text-3xl font-bold text-green-600">
-                  {getExpiringItems().filter(item => 
-                    differenceInDays(new Date(item.estimatedExpiryDate), new Date()) > 3
-                  ).length}
-                </p>
-                <p className="text-green-600/75 text-sm">items</p>
-              </div>
 
-              <Link href="/receipts" className="bg-blue-50 rounded-xl p-6 transition-all hover:shadow-md">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  Total Receipts
-                </h3>
-                <p className="text-3xl font-bold text-blue-600">
-                  {receipts.length}
-                </p>
-                <p className="text-blue-600/75 text-sm">View All →</p>
-              </Link>
-            </div>
-          </div>
-
-          {/* Receipt Upload Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8">
-            <ReceiptUploader />
-          </div>
-
-          {/* Expiring Items Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Items Expiring Soon</h2>
-              <button
-                onClick={handleClearExpiredItems}
-                disabled={isClearing || loading}
-                className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                  isClearing || loading
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'text-red-700 bg-red-50 hover:bg-red-100'
-                }`}
-              >
-                <Trash2 className={`w-4 h-4 mr-2 ${isClearing ? 'animate-pulse' : ''}`} />
-                {isClearing ? 'Clearing...' : 'Clear Expired'}
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {getExpiringItems().length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No items to display</p>
-              ) : (
-                getExpiringItems().map(item => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-xl border border-gray-100 p-4 transition-all hover:shadow-md"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-900">{item.name}</p>
-                        <p className="text-sm text-gray-500">
-                          From {item.store} • {formatDateForDisplay(item.purchaseDate)}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {getExpiryText(item.estimatedExpiryDate)}
-                      </span>
-                    </div>
+              {/* Upload Section */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6">
+                <div className="h-full flex flex-col">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Receipt</h3>
+                  <div className="flex-grow">
+                    <ReceiptUploader />
                   </div>
-                ))
-              )}
+                </div>
+              </div>
+
+              {/* Expiring Items Section */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 transition-all hover:shadow-xl hover:bg-white/90">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Items Expiring Soon</h2>
+                  <button
+                    onClick={handleClearExpiredItems}
+                    disabled={isClearing || loading}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                      isClearing || loading
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'text-red-700 bg-red-50 hover:bg-red-100'
+                    }`}
+                  >
+                    <Trash2 className={`w-4 h-4 mr-2 ${isClearing ? 'animate-pulse' : ''}`} />
+                    {isClearing ? 'Clearing...' : 'Clear Expired'}
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {getExpiringItems().length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No items to display</p>
+                  ) : (
+                    getExpiringItems().map(item => (
+                      <div
+                        key={item.id}
+                        className="bg-white rounded-xl border border-gray-100 p-4 transition-all hover:shadow-md"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-500">
+                              From {item.store} • {formatDateForDisplay(item.purchaseDate)}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {getExpiryText(item.estimatedExpiryDate)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

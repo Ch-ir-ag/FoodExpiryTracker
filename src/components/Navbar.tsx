@@ -22,14 +22,6 @@ export default function Navbar() {
               <span className="text-2xl font-bold text-gray-900">Tracker</span>
             </Link>
             <div className="hidden md:flex ml-10 space-x-8">
-              {user && (
-                <Link
-                  href="/receipts"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-                >
-                  Receipts
-                </Link>
-              )}
               <Link
                 href="/how-it-works"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
