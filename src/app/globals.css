@@ -5,6 +5,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --gradient-background: linear-gradient(to bottom, #f9fafb, #ffffff);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,10 +15,24 @@
   }
 }
 
-body {
+html, body {
+  min-height: 100vh;
+  height: 100%;
   color: var(--foreground);
-  background: var(--background);
+  background: var(--gradient-background);
+}
+
+body {
   font-family: Arial, Helvetica, sans-serif;
+  background: var(--gradient-background);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  background: var(--gradient-background);
 }
 
 @keyframes fade-in {
