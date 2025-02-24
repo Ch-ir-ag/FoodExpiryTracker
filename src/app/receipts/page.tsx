@@ -5,10 +5,12 @@ import { Receipt } from '@/types';
 import { SupabaseService } from '@/services/supabaseService';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import { Trash2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function ReceiptsPage() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     loadReceipts();
@@ -28,6 +30,26 @@ export default function ReceiptsPage() {
     }
   };
 
+  const handleClearAllReceipts = async () => {
+    if (!confirm('Are you sure you want to clear all receipts? This cannot be undone.')) {
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      for (const receipt of receipts) {
+        await SupabaseService.deleteReceipt(receipt.id);
+      }
+      await loadReceipts();
+      toast.success('All receipts cleared successfully');
+    } catch (error) {
+      console.error('Error clearing receipts:', error);
+      toast.error('Failed to clear receipts');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -38,7 +60,21 @@ export default function ReceiptsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Receipt History</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Receipt History</h1>
+        <button
+          onClick={handleClearAllReceipts}
+          disabled={isClearing || receipts.length === 0}
+          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            isClearing || receipts.length === 0
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'text-red-700 bg-red-50 hover:bg-red-100'
+          }`}
+        >
+          <Trash2 className={`w-4 h-4 mr-2 ${isClearing ? 'animate-pulse' : ''}`} />
+          {isClearing ? 'Clearing...' : 'Clear All Receipts'}
+        </button>
+      </div>
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="space-y-4">
           {receipts.map(receipt => (

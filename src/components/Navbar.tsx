@@ -22,6 +22,22 @@ export default function Navbar() {
               <span className="text-2xl font-bold text-gray-900">Tracker</span>
             </Link>
             <div className="hidden md:flex ml-10 space-x-8">
+              {user && (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/receipts"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                  >
+                    Receipts
+                  </Link>
+                </>
+              )}
               <Link
                 href="/how-it-works"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
@@ -32,20 +48,12 @@ export default function Navbar() {
           </div>
           <div className="flex items-center space-x-4">
             {user ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Sign Out
-                </button>
-              </>
+              <button
+                onClick={handleSignOut}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Sign Out
+              </button>
             ) : (
               <Link
                 href="/"

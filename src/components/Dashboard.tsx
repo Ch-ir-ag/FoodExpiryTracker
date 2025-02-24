@@ -9,6 +9,7 @@ import { Trash2 } from 'lucide-react';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import toast from 'react-hot-toast';
 import ReceiptUploader from './ReceiptUploader';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -138,15 +139,15 @@ export default function Dashboard() {
                 <p className="text-green-600/75 text-sm">items</p>
               </div>
 
-              <div className="bg-blue-50 rounded-xl p-6 transition-all hover:shadow-md">
+              <Link href="/receipts" className="bg-blue-50 rounded-xl p-6 transition-all hover:shadow-md">
                 <h3 className="text-lg font-semibold text-blue-900 mb-2">
                   Total Receipts
                 </h3>
                 <p className="text-3xl font-bold text-blue-600">
                   {receipts.length}
                 </p>
-                <p className="text-blue-600/75 text-sm">receipts</p>
-              </div>
+                <p className="text-blue-600/75 text-sm">View All →</p>
+              </Link>
             </div>
           </div>
 
