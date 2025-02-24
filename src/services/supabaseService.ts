@@ -168,14 +168,29 @@ export class SupabaseService {
     }
 
     try {
-      const { error } = await supabase
+      // First delete all receipt items
+      const { error: itemsError } = await supabase
+        .from('receipt_items')
+        .delete()
+        .eq('receipt_id', receiptId);
+
+      if (itemsError) {
+        console.error('Error deleting receipt items:', itemsError);
+        throw itemsError;
+      }
+
+      // Then delete the receipt
+      const { error: receiptError } = await supabase
         .from('receipts')
         .delete()
         .eq('id', receiptId);
 
-      if (error) throw error;
+      if (receiptError) {
+        console.error('Error deleting receipt:', receiptError);
+        throw receiptError;
+      }
     } catch (error) {
-      console.error('Error deleting receipt:', error);
+      console.error('Error in deleteReceipt:', error);
       throw error;
     }
   }

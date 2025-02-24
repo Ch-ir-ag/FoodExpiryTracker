@@ -24,9 +24,17 @@ export default function ReceiptsPage() {
   };
 
   const handleDeleteReceipt = async (receiptId: string) => {
-    if (confirm('Are you sure you want to delete this receipt?')) {
+    if (!confirm('Are you sure you want to delete this receipt?')) {
+      return;
+    }
+    
+    try {
       await SupabaseService.deleteReceipt(receiptId);
-      await loadReceipts();
+      setReceipts(receipts.filter(r => r.id !== receiptId));
+      toast.success('Receipt deleted successfully');
+    } catch (error) {
+      console.error('Error deleting receipt:', error);
+      toast.error('Failed to delete receipt');
     }
   };
 
@@ -37,13 +45,22 @@ export default function ReceiptsPage() {
 
     setIsClearing(true);
     try {
-      for (const receipt of receipts) {
+      // Create a copy of receipts for deletion
+      const receiptsToDelete = [...receipts];
+      
+      // Delete each receipt and log the process
+      for (const receipt of receiptsToDelete) {
+        console.log('Deleting receipt:', receipt.id);
         await SupabaseService.deleteReceipt(receipt.id);
       }
-      await loadReceipts();
+
+      // Clear local state
+      setReceipts([]);
       toast.success('All receipts cleared successfully');
     } catch (error) {
       console.error('Error clearing receipts:', error);
+      // Refresh the list to ensure UI is in sync with database
+      await loadReceipts();
       toast.error('Failed to clear receipts');
     } finally {
       setIsClearing(false);
