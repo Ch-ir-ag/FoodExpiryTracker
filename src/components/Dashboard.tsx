@@ -9,7 +9,6 @@ import { Trash2 } from 'lucide-react';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import toast from 'react-hot-toast';
 import ReceiptUploader from './ReceiptUploader';
-import Link from 'next/link';
 
 export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
