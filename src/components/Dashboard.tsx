@@ -102,72 +102,70 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 animate-gradient-slow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="relative">
-          {/* Add a subtle floating blob in the background */}
-          <div className="absolute -top-20 -right-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
-          <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
-          
-          {/* Main content with glassmorphism */}
-          <div className="relative bg-white/60 backdrop-blur-lg rounded-3xl shadow-xl p-8">
+          {/* Main content */}
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8">
             {/* Welcome Section */}
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                   Welcome back, {user?.email?.split('@')[0]}
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-sm sm:text-base text-gray-600 mt-1">
                   Track and manage your food expiry dates
                 </p>
               </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Stats Section */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 transition-all hover:shadow-md hover:scale-[1.02]">
-                  <h3 className="text-lg font-semibold text-orange-900 mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-orange-50 rounded-xl p-4 sm:p-6 transition-all hover:shadow-md">
+                  <h3 className="text-base sm:text-lg font-semibold text-orange-900 mb-2">
                     Expiring Soon
                   </h3>
-                  <p className="text-3xl font-bold text-orange-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-orange-600">
                     {getExpiringItems().filter(item => 
                       differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3 &&
                       differenceInDays(new Date(item.estimatedExpiryDate), new Date()) >= 0
                     ).length}
                   </p>
-                  <p className="text-orange-600/75 text-sm">items</p>
+                  <p className="text-sm text-orange-600/75">items</p>
                 </div>
                 
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 transition-all hover:shadow-md hover:scale-[1.02]">
-                  <h3 className="text-lg font-semibold text-green-900 mb-2">
+                <div className="bg-green-50 rounded-xl p-4 sm:p-6 transition-all hover:shadow-md">
+                  <h3 className="text-base sm:text-lg font-semibold text-green-900 mb-2">
                     Fresh Items
                   </h3>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">
                     {getExpiringItems().filter(item => 
                       differenceInDays(new Date(item.estimatedExpiryDate), new Date()) > 3
                     ).length}
                   </p>
-                  <p className="text-green-600/75 text-sm">items</p>
+                  <p className="text-sm text-green-600/75">items</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 transition-all hover:shadow-md hover:scale-[1.02]">
-                  <h3 className="text-lg font-semibold text-red-900 mb-2">
+                <div className="bg-red-50 rounded-xl p-4 sm:p-6 transition-all hover:shadow-md">
+                  <h3 className="text-base sm:text-lg font-semibold text-red-900 mb-2">
                     Expired
                   </h3>
-                  <p className="text-3xl font-bold text-red-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-red-600">
                     {getExpiringItems().filter(item => 
                       differenceInDays(new Date(item.estimatedExpiryDate), new Date()) < 0
                     ).length}
                   </p>
-                  <p className="text-red-600/75 text-sm">items</p>
+                  <p className="text-sm text-red-600/75">items</p>
                 </div>
               </div>
 
               {/* Upload Section */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6">
+              <div className="bg-white rounded-xl shadow p-4 sm:p-6 border border-gray-100">
                 <div className="h-full flex flex-col">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Receipt</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+                    Upload Receipt
+                  </h3>
                   <div className="flex-grow">
                     <ReceiptUploader />
                   </div>
@@ -175,13 +173,15 @@ export default function Dashboard() {
               </div>
 
               {/* Expiring Items Section */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 transition-all hover:shadow-xl hover:bg-white/90">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Items Expiring Soon</h2>
+              <div className="bg-white rounded-xl shadow p-4 sm:p-8 border border-gray-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                    Items Expiring Soon
+                  </h2>
                   <button
                     onClick={handleClearExpiredItems}
                     disabled={isClearing || loading}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                    className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                       isClearing || loading
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'text-red-700 bg-red-50 hover:bg-red-100'
@@ -192,16 +192,16 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {getExpiringItems().length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No items to display</p>
+                    <p className="text-gray-500 text-center py-6">No items to display</p>
                   ) : (
                     getExpiringItems().map(item => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-xl border border-gray-100 p-4 transition-all hover:shadow-md"
+                        className="bg-white rounded-lg border border-gray-100 p-3 sm:p-4"
                       >
-                        <div className="flex justify-between items-start">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                           <div>
                             <p className="font-medium text-gray-900">{item.name}</p>
                             <p className="text-sm text-gray-500">
