@@ -4,9 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Dashboard from '@/components/Dashboard';
 import { supabase } from '@/lib/supabase';
-import Image from 'next/image';
-import { ArrowRight, Receipt, Barcode, BarChart, Clock, Shield } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowRight, Receipt, Barcode, BarChart } from 'lucide-react';
 
 // Stats can be manually edited here
 const STATS = {
