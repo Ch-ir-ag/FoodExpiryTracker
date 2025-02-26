@@ -4,6 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Dashboard from '@/components/Dashboard';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
+import { ArrowRight, Receipt, Barcode, BarChart, Clock, Shield } from 'lucide-react';
+import Link from 'next/link';
 
 // Stats can be manually edited here
 const STATS = {
@@ -40,9 +43,9 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <main className="flex-1">
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white">
         {/* Background decorations */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-50" />
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-blue-100 to-transparent -z-10" />
@@ -108,10 +111,98 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Supported Retailers Section */}
-      <div className="relative bg-gradient-to-b from-gray-50/50 to-blue-50/50 py-16 overflow-hidden">
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Powerful Features for Food Management
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <Receipt className="w-12 h-12 text-blue-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Receipt Scanning</h3>
+              <p className="text-gray-600">
+                Upload your receipt and let our AI extract all the important details automatically
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <Barcode className="w-12 h-12 text-blue-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Barcode Scanning</h3>
+              <p className="text-gray-600">
+                Quickly add items by scanning their barcodes for instant product recognition
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <BarChart className="w-12 h-12 text-blue-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Dashboard</h3>
+              <p className="text-gray-600">
+                View all your items and their expiry dates in an intuitive dashboard
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
+            How It Works
+          </h2>
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            Get started with FoodTracker in three simple steps
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="relative">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-xl font-bold text-blue-600">1</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Account</h3>
+                <p className="text-gray-600">
+                  Sign up for free and set up your personal food tracking dashboard
+                </p>
+              </div>
+              <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
+                <ArrowRight className="w-6 h-6 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-xl font-bold text-blue-600">2</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Scan & Upload</h3>
+                <p className="text-gray-600">
+                  Upload your receipt or scan product barcodes to add items
+                </p>
+              </div>
+              <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
+                <ArrowRight className="w-6 h-6 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-xl font-bold text-blue-600">3</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Track & Manage</h3>
+              <p className="text-gray-600">
+                View your items and get notified before they expire
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stores Section */}
+      <section className="relative bg-gradient-to-b from-gray-50/50 to-blue-50/50 py-16 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-indigo-50/30" />
         <div className="absolute -top-40 right-0 w-72 h-72 bg-blue-200 rounded-full filter blur-3xl opacity-10" />
@@ -154,7 +245,26 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to Start Tracking?
+          </h2>
+          <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who are reducing food waste and saving money
+          </p>
+          <Link
+            href="/auth"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-600 bg-white hover:bg-blue-50 transition-colors"
+          >
+            Get Started
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
