@@ -45,7 +45,7 @@ export default function Home() {
   return (
     <main className="flex-1">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+      <section id="signup" className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white">
         {/* Background decorations */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-50" />
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-blue-100 to-transparent -z-10" />
@@ -148,7 +148,7 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 bg-gray-50">
+      <section id="how-it-works" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
             How It Works
@@ -256,13 +256,18 @@ export default function Home() {
           <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
             Join thousands of users who are reducing food waste and saving money
           </p>
-          <Link
-            href="/auth"
+          <button
+            onClick={() => {
+              document.getElementById('signup')?.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }}
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-600 bg-white hover:bg-blue-50 transition-colors"
           >
             Get Started
             <ArrowRight className="ml-2 w-5 h-5" />
-          </Link>
+          </button>
         </div>
       </section>
     </main>
