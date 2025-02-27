@@ -93,6 +93,20 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      if (window.confirm('Are you sure you want to remove this item?')) {
+        await SupabaseService.deleteReceiptItem(itemId);
+        toast.success('Item removed successfully');
+        // Refresh the receipts list
+        loadReceipts();
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to remove item');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -199,24 +213,33 @@ export default function Dashboard() {
                     getExpiringItems().map(item => (
                       <div
                         key={item.id}
-                        className="bg-white rounded-lg border border-gray-100 p-3 sm:p-4"
+                        className="bg-white rounded-lg border border-gray-100 p-3 sm:p-4 hover:shadow-sm transition-all"
                       >
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-                          <div>
+                          <div className="flex-grow">
                             <p className="font-medium text-gray-900">{item.name}</p>
                             <p className="text-sm text-gray-500">
                               From {item.store} • {formatDateForDisplay(item.purchaseDate)}
                             </p>
                           </div>
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}
-                          >
-                            {getExpiryText(item.estimatedExpiryDate)}
-                          </span>
+                          <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                differenceInDays(new Date(item.estimatedExpiryDate), new Date()) <= 3
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {getExpiryText(item.estimatedExpiryDate)}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                              aria-label="Delete item"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
