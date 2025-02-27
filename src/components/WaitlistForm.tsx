@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
 
 interface Props {
   onSwitchToPilot: () => void;
@@ -16,12 +17,30 @@ export default function WaitlistForm({ onSwitchToPilot }: Props) {
     setLoading(true);
 
     try {
-      // Here you would typically save the email to your waitlist database
-      // For now, we'll just show a success message
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      toast.success('Added to waitlist! We\'ll notify you when spots open up.');
+      if (!supabase) {
+        throw new Error('Supabase client not initialized');
+      }
+
+      // Save email to Supabase waitlist table
+      const { error } = await supabase
+        .from('waitlist')
+        .insert([{ email }]);
+
+      if (error) {
+        if (error.code === '23505') {
+          // Unique constraint violation - email already exists
+          toast.success('You\'re already on our waitlist! We\'ll be in touch soon.');
+        } else {
+          console.error('Error saving to waitlist:', error);
+          throw error;
+        }
+      } else {
+        toast.success('Added to waitlist! We\'ll notify you when spots open up.');
+      }
+      
       setEmail('');
-    } catch {
+    } catch (error) {
+      console.error('Failed to join waitlist:', error);
       toast.error('Failed to join waitlist. Please try again.');
     } finally {
       setLoading(false);
