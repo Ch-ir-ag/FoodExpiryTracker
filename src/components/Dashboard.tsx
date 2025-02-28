@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Receipt } from '@/types';
 import { SupabaseService } from '@/services/supabaseService';
 import { differenceInDays } from 'date-fns';
-import { useAuth } from '@/contexts/AuthContext';
 import { Trash2 } from 'lucide-react';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import toast from 'react-hot-toast';
@@ -14,7 +13,6 @@ export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
-  const { user } = useAuth();
 
   useEffect(() => {
     loadReceipts();
