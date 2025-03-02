@@ -91,8 +91,9 @@ const SHELF_LIFE_DATABASE: ShelfLife[] = [
   { category: 'lidl-dairy', daysToExpiry: 10, storageType: 'refrigerated' },
 ];
 
-// Product name keywords mapping to categories
-const PRODUCT_KEYWORDS: Record<string, string[]> = {
+// Product name keywords mapping to categories - kept for reference but not actively used
+// @ts-ignore
+const _PRODUCT_KEYWORDS: Record<string, string[]> = {
   'milk': ['milk', 'dairy milk', 'whole milk', 'semi skimmed', 'skimmed', 'almond milk', 'soy milk', 'oat milk'],
   'yogurt': ['yogurt', 'yoghurt', 'greek yogurt', 'yogurt drink', 'activia', 'yoplait', 'muller'],
   'cheese-soft': ['cream cheese', 'cottage cheese', 'ricotta', 'brie', 'camembert', 'mozzarella', 'feta'],
@@ -165,8 +166,9 @@ const PRODUCT_KEYWORDS: Record<string, string[]> = {
   'lidl-dairy': ['lidl dairy', 'dairy section'],
 };
 
-// Brand-specific category mapping
-const BRAND_CATEGORY_MAPPING: Record<string, string> = {
+// Brand-specific category mapping - kept for reference but not actively used
+// @ts-ignore
+const _BRAND_CATEGORY_MAPPING: Record<string, string> = {
   'lurpak': 'butter',
   'flora': 'butter',
   'muller': 'yogurt',
@@ -192,8 +194,9 @@ const BRAND_CATEGORY_MAPPING: Record<string, string> = {
   'lidl': 'default', // Will be overridden by more specific product matches
 };
 
-// Regional adjustments (e.g., for Ireland)
-const REGIONAL_ADJUSTMENTS: Record<string, number> = {
+// Regional adjustments - kept for reference but not actively used
+// @ts-ignore
+const _REGIONAL_ADJUSTMENTS: Record<string, number> = {
   'milk': 1, // Add 1 day to milk shelf life in Ireland (example)
   'bread-fresh': -1, // Reduce by 1 day due to humidity (example)
 };

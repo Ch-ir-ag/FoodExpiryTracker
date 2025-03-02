@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase';
 import { FoodProduct, ProductMatch } from '@/types';
-import { formatDateForDB } from '@/utils/dateUtils';
 
 /**
  * Service for managing the dynamic food product database
