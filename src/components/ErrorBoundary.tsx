@@ -43,7 +43,7 @@ class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-[300px] flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Something went wrong</h2>
           <p className="text-gray-600 mb-4 text-center">
-            We're having trouble displaying this content. Please try refreshing the page.
+            We&apos;re having trouble displaying this content. Please try refreshing the page.
           </p>
           <button
             onClick={() => window.location.reload()}

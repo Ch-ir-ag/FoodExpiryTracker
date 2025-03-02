@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 /**
  * A component that renders an animated visualization of AI/ML processing
@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
  */
 export default function AIVisualization() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
   
   useEffect(() => {
     // Prevent running in SSR
@@ -61,8 +60,6 @@ export default function AIVisualization() {
         
         // Recreate neural network with appropriate density for screen size
         createNeuralNetwork();
-        
-        setIsInitialized(true);
       } catch (error) {
         console.error('Error setting canvas dimensions:', error);
       }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Brain, BarChart, Clock, Zap } from 'lucide-react';
 
 /**
@@ -31,6 +31,28 @@ export default function AILearningProcess() {
       description: "The system provides personalized expiry predictions and consumption recommendations to minimize waste."
     }
   ];
+
+  const startStepAnimation = useCallback(() => {
+    try {
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      // Reset to first step
+      setActiveStep(0);
+      
+      // Set up interval to cycle through steps
+      intervalRef.current = setInterval(() => {
+        setActiveStep(prev => {
+          const nextStep = (prev + 1) % steps.length;
+          return nextStep;
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Error starting step animation:', error);
+    }
+  }, [steps.length]);
 
   useEffect(() => {
     // Prevent running in SSR
@@ -69,29 +91,7 @@ export default function AILearningProcess() {
         }
       };
     }
-  }, []);
-  
-  const startStepAnimation = () => {
-    try {
-      // Clear any existing interval
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      
-      // Reset to first step
-      setActiveStep(0);
-      
-      // Set up interval to cycle through steps
-      intervalRef.current = setInterval(() => {
-        setActiveStep(prev => {
-          const nextStep = (prev + 1) % steps.length;
-          return nextStep;
-        });
-      }, 3000);
-    } catch (error) {
-      console.error('Error starting step animation:', error);
-    }
-  };
+  }, [startStepAnimation]);
 
   return (
     <div ref={componentRef} className="py-12">
