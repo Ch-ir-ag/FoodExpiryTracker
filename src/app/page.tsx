@@ -4,7 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Dashboard from '@/components/Dashboard';
 import { supabase } from '@/lib/supabase';
-import { ArrowRight, Receipt, Upload, BarChart } from 'lucide-react';
+import { ArrowRight, Receipt, Upload, BarChart, Sparkles } from 'lucide-react';
+import AIFeatureSection from '@/components/AIFeatureSection';
+import DataFlowAnimation from '@/components/DataFlowAnimation';
+import AIHeroAnimation from '@/components/AIHeroAnimation';
+import AILearningProcess from '@/components/AILearningProcess';
+import AIWasteReductionStats from '@/components/AIWasteReductionStats';
 
 // Stats can be manually edited here
 const STATS = {
@@ -50,17 +55,23 @@ export default function Home() {
         <div className="absolute top-20 left-0 w-72 h-72 bg-blue-200 rounded-full filter blur-3xl opacity-20 -z-10" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200 rounded-full filter blur-3xl opacity-20 -z-10" />
         
+        {/* AI Animation */}
+        <AIHeroAnimation />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
             <div className="flex-1 text-center lg:text-left">
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
+                <Sparkles className="h-4 w-4 mr-1" />
+                AI-Powered Food Management
+              </div>
               <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                 Never Let Your Food
                 <span className="text-blue-600"> Go to Waste </span>
                 Again
               </h1>
               <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0">
-                Track expiry dates, get timely reminders, and make the most of your groceries. 
-                Join hundrers of users saving money and reducing waste.
+                Our AI-powered platform tracks expiry dates, provides smart predictions, and sends timely reminders to help you reduce food waste and save money.
               </p>
               
               {/* Stats Section */}
@@ -114,9 +125,18 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
             Powerful Features for Food Management
           </h2>
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            Our AI-powered platform makes tracking food expiry dates effortless
+          </p>
+          
+          {/* Data Flow Animation */}
+          <div className="mb-16">
+            <DataFlowAnimation />
+          </div>
+          
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <Receipt className="w-12 h-12 text-blue-500 mb-4" />
@@ -135,13 +155,32 @@ export default function Home() {
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <BarChart className="w-12 h-12 text-blue-500 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Dashboard</h3>
+              <Sparkles className="w-12 h-12 text-blue-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Predictions</h3>
               <p className="text-gray-600">
-                View all your items and their expiry dates in an intuitive dashboard
+                Our AI predicts expiry dates with high accuracy, even for items without explicit dates
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* AI Feature Section */}
+      <AIFeatureSection />
+
+      {/* AI Learning Process Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Continuous Learning System
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our AI-powered platform gets smarter with every user interaction, improving expiry date predictions for everyone
+            </p>
+          </div>
+          
+          <AILearningProcess />
         </div>
       </section>
 
@@ -231,6 +270,24 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+
+
+      {/* AI Impact Stats Section */}
+      <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              AI-Powered Impact
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our AI technology is helping users reduce food waste and save money through smart predictions and timely reminders
+            </p>
+          </div>
+          
+          <AIWasteReductionStats />
         </div>
       </section>
 
