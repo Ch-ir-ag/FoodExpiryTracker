@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Receipt, ShoppingBag, Calendar, Brain } from 'lucide-react';
+import { Receipt, Calendar, Brain } from 'lucide-react';
 
 /**
  * A component that displays an animated data flow visualization

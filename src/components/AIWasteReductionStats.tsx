@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TrendingUp, DollarSign, Leaf, ShoppingBag } from 'lucide-react';
 
 /**
@@ -6,7 +6,7 @@ import { TrendingUp, DollarSign, Leaf, ShoppingBag } from 'lucide-react';
  */
 export default function AIWasteReductionStats() {
   // Stats to display (these would come from your backend in a real app)
-  const stats = [
+  const stats = useMemo(() => [
     {
       icon: <ShoppingBag className="h-8 w-8 text-blue-500" />,
       value: 1250,
@@ -35,7 +35,7 @@ export default function AIWasteReductionStats() {
       suffix: "%",
       color: "from-purple-400 to-purple-600"
     }
-  ];
+  ], []);
 
   // Refs for intersection observer
   const statsRef = useRef<HTMLDivElement>(null);
@@ -85,7 +85,7 @@ export default function AIWasteReductionStats() {
     }
     
     return () => observer.disconnect();
-  }, []);
+  }, [stats]);
   
   return (
     <div ref={statsRef} className="py-8">

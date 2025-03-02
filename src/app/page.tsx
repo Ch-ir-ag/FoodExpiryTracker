@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Dashboard from '@/components/Dashboard';
 import { supabase } from '@/lib/supabase';
-import { ArrowRight, Receipt, Upload, BarChart, Sparkles } from 'lucide-react';
+import { ArrowRight, Receipt, Upload, Sparkles } from 'lucide-react';
 import AIFeatureSection from '@/components/AIFeatureSection';
 import DataFlowAnimation from '@/components/DataFlowAnimation';
 import AIHeroAnimation from '@/components/AIHeroAnimation';
@@ -273,8 +273,6 @@ export default function Home() {
         </div>
       </section>
 
-
-
       {/* AI Impact Stats Section */}
       <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -314,6 +312,6 @@ export default function Home() {
           </button>
         </div>
       </section>
-      </main>
+    </main>
   );
 }
