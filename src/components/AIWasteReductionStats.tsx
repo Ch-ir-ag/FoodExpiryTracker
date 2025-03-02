@@ -47,45 +47,68 @@ export default function AIWasteReductionStats() {
   const animationDuration = 2000;
   
   useEffect(() => {
+    // Prevent running in SSR
+    if (typeof window === 'undefined') return;
+    
     // Function to animate counters
     const animateCounters = () => {
-      const startTime = Date.now();
-      
-      const interval = setInterval(() => {
-        const elapsedTime = Date.now() - startTime;
-        const progress = Math.min(elapsedTime / animationDuration, 1);
+      try {
+        const startTime = Date.now();
         
-        // Easing function for smoother animation
-        const easeOutQuad = (t: number) => t * (2 - t);
-        const easedProgress = easeOutQuad(progress);
+        const interval = setInterval(() => {
+          try {
+            const elapsedTime = Date.now() - startTime;
+            const progress = Math.min(elapsedTime / animationDuration, 1);
+            
+            // Easing function for smoother animation
+            const easeOutQuad = (t: number) => t * (2 - t);
+            const easedProgress = easeOutQuad(progress);
+            
+            setCounters(stats.map((stat) => Math.floor(stat.value * easedProgress)));
+            
+            if (progress >= 1) {
+              clearInterval(interval);
+            }
+          } catch (error) {
+            console.error('Error in counter animation interval:', error);
+            clearInterval(interval);
+          }
+        }, 16); // ~60fps
         
-        setCounters(stats.map((stat) => Math.floor(stat.value * easedProgress)));
-        
-        if (progress >= 1) {
-          clearInterval(interval);
-        }
-      }, 16); // ~60fps
-      
-      return () => clearInterval(interval);
+        return () => clearInterval(interval);
+      } catch (error) {
+        console.error('Error animating counters:', error);
+        return () => {};
+      }
     };
     
     // Set up intersection observer to trigger animation when component is in view
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          animateCounters();
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
+    let observer: IntersectionObserver | null = null;
     
-    if (statsRef.current) {
-      observer.observe(statsRef.current);
+    try {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            animateCounters();
+            if (observer) observer.disconnect();
+          }
+        },
+        { threshold: 0.1 }
+      );
+      
+      if (statsRef.current) {
+        observer.observe(statsRef.current);
+      }
+    } catch (error) {
+      console.error('Error setting up intersection observer:', error);
+      // Fallback: just animate without intersection observer
+      animateCounters();
     }
     
-    return () => observer.disconnect();
-  }, [stats]);
+    return () => {
+      if (observer) observer.disconnect();
+    };
+  }, [stats, animationDuration]);
   
   return (
     <div ref={statsRef} className="py-8">

@@ -9,53 +9,72 @@ export default function DataFlowAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
+    // Prevent running in SSR
+    if (typeof window === 'undefined') return;
+    
     const container = containerRef.current;
     if (!container) return;
     
     // Create animated particles
     const createParticles = () => {
-      // Remove existing particles
-      const existingParticles = container.querySelectorAll('.data-particle');
-      existingParticles.forEach(p => p.remove());
-      
-      // Create new particles
-      for (let i = 0; i < 15; i++) {
-        setTimeout(() => {
-          if (!container) return;
+      try {
+        // Remove existing particles
+        const existingParticles = container.querySelectorAll('.data-particle');
+        existingParticles.forEach(p => p.remove());
+        
+        // Create new particles
+        for (let i = 0; i < 15; i++) {
+          const particleTimeout = setTimeout(() => {
+            if (!container) return;
+            
+            const particle = document.createElement('div');
+            particle.className = 'data-particle absolute w-2 h-2 rounded-full bg-blue-500 opacity-70';
+            
+            // Random starting position at the Receipt icon
+            const startX = 50; // Approximate x position of Receipt icon
+            const startY = 100; // Approximate y position of Receipt icon
+            
+            particle.style.left = `${startX + (Math.random() * 10 - 5)}px`;
+            particle.style.top = `${startY + (Math.random() * 10 - 5)}px`;
+            
+            container.appendChild(particle);
+            
+            // Animate to Brain
+            const brainTimeout = setTimeout(() => {
+              particle.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+              particle.style.left = `${180 + (Math.random() * 10 - 5)}px`; // Brain x position
+              particle.style.top = `${100 + (Math.random() * 10 - 5)}px`; // Brain y position
+            }, 100);
+            
+            // Animate to Calendar
+            const calendarTimeout = setTimeout(() => {
+              particle.style.left = `${310 + (Math.random() * 10 - 5)}px`; // Calendar x position
+              particle.style.top = `${100 + (Math.random() * 10 - 5)}px`; // Calendar y position
+            }, 1600);
+            
+            // Fade out and remove
+            const fadeTimeout = setTimeout(() => {
+              particle.style.opacity = '0';
+              const removeTimeout = setTimeout(() => {
+                if (particle.parentNode === container) {
+                  particle.remove();
+                }
+              }, 500);
+              
+              return () => clearTimeout(removeTimeout);
+            }, 3000);
+            
+            return () => {
+              clearTimeout(brainTimeout);
+              clearTimeout(calendarTimeout);
+              clearTimeout(fadeTimeout);
+            };
+          }, i * 300); // Stagger particle creation
           
-          const particle = document.createElement('div');
-          particle.className = 'data-particle absolute w-2 h-2 rounded-full bg-blue-500 opacity-70';
-          
-          // Random starting position at the Receipt icon
-          const startX = 50; // Approximate x position of Receipt icon
-          const startY = 100; // Approximate y position of Receipt icon
-          
-          particle.style.left = `${startX + (Math.random() * 10 - 5)}px`;
-          particle.style.top = `${startY + (Math.random() * 10 - 5)}px`;
-          
-          container.appendChild(particle);
-          
-          // Animate to Brain
-          setTimeout(() => {
-            particle.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
-            particle.style.left = `${180 + (Math.random() * 10 - 5)}px`; // Brain x position
-            particle.style.top = `${100 + (Math.random() * 10 - 5)}px`; // Brain y position
-          }, 100);
-          
-          // Animate to Calendar
-          setTimeout(() => {
-            particle.style.left = `${310 + (Math.random() * 10 - 5)}px`; // Calendar x position
-            particle.style.top = `${100 + (Math.random() * 10 - 5)}px`; // Calendar y position
-          }, 1600);
-          
-          // Fade out and remove
-          setTimeout(() => {
-            particle.style.opacity = '0';
-            setTimeout(() => {
-              particle.remove();
-            }, 500);
-          }, 3000);
-        }, i * 300); // Stagger particle creation
+          return () => clearTimeout(particleTimeout);
+        }
+      } catch (error) {
+        console.error('Error creating particles:', error);
       }
     };
     

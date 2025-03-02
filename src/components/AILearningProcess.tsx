@@ -1,81 +1,139 @@
-import React from 'react';
-import { Brain, RotateCw, Clock, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Brain, BarChart, Clock, Zap } from 'lucide-react';
 
 /**
- * A component that visualizes how the AI learns from user corrections to improve expiry date predictions.
+ * A component that visualizes the AI learning process with animated steps.
  */
 export default function AILearningProcess() {
+  const [activeStep, setActiveStep] = useState(0);
+  const componentRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
   const steps = [
     {
-      icon: <Brain className="h-8 w-8 text-blue-500" />,
-      title: "Initial Prediction",
-      description: "AI analyzes product data to make an initial expiry date prediction"
+      icon: <Clock className="h-8 w-8 text-blue-500" />,
+      title: "Data Collection",
+      description: "The system collects data about your food items, including purchase dates, expiry dates, and consumption patterns."
     },
     {
-      icon: <RotateCw className="h-8 w-8 text-indigo-500" />,
-      title: "User Correction",
-      description: "Users can correct predictions based on their knowledge"
+      icon: <BarChart className="h-8 w-8 text-indigo-500" />,
+      title: "Pattern Analysis",
+      description: "AI algorithms analyze your household's unique consumption patterns and identify trends in food usage."
     },
     {
-      icon: <Clock className="h-8 w-8 text-purple-500" />,
-      title: "Model Adaptation",
-      description: "AI learns from corrections to improve future predictions"
+      icon: <Brain className="h-8 w-8 text-purple-500" />,
+      title: "Model Training",
+      description: "Machine learning models are trained on your data to predict optimal consumption windows for different food categories."
     },
     {
-      icon: <CheckCircle className="h-8 w-8 text-green-500" />,
-      title: "Improved Accuracy",
-      description: "System becomes more accurate over time for all users"
+      icon: <Zap className="h-8 w-8 text-pink-500" />,
+      title: "Smart Predictions",
+      description: "The system provides personalized expiry predictions and consumption recommendations to minimize waste."
     }
   ];
 
-  return (
-    <div className="py-12 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900">How Our AI Learns & Improves</h2>
-          <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
-            Our system continuously improves through a feedback loop of predictions, corrections, and learning.
-          </p>
-        </div>
+  useEffect(() => {
+    // Prevent running in SSR
+    if (typeof window === 'undefined') return;
+    
+    try {
+      // Set up intersection observer to start animation when component is in view
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            startStepAnimation();
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.2 }
+      );
+      
+      if (componentRef.current) {
+        observer.observe(componentRef.current);
+      }
+      
+      return () => {
+        observer.disconnect();
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up intersection observer:', error);
+      // Fallback: just start animation without intersection observer
+      startStepAnimation();
+      
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      };
+    }
+  }, []);
+  
+  const startStepAnimation = () => {
+    try {
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      
+      // Reset to first step
+      setActiveStep(0);
+      
+      // Set up interval to cycle through steps
+      intervalRef.current = setInterval(() => {
+        setActiveStep(prev => {
+          const nextStep = (prev + 1) % steps.length;
+          return nextStep;
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Error starting step animation:', error);
+    }
+  };
 
-        <div className="relative">
-          {/* Connection line */}
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-200 via-indigo-300 to-green-200 transform -translate-y-1/2 hidden md:block" />
+  return (
+    <div ref={componentRef} className="py-12">
+      <h2 className="text-3xl font-bold text-center mb-12">How Our AI Learns</h2>
+      
+      <div className="max-w-4xl mx-auto">
+        {/* Progress bar */}
+        <div className="relative mb-12">
+          <div className="absolute h-1 w-full bg-gray-200 rounded"></div>
+          <div 
+            className="absolute h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded transition-all duration-500 ease-in-out"
+            style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
+          ></div>
           
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          {/* Step indicators */}
+          <div className="relative flex justify-between">
             {steps.map((step, index) => (
               <div 
-                key={index} 
-                className="bg-white p-6 rounded-xl shadow-md relative z-10 transform transition-transform duration-300 hover:-translate-y-2"
+                key={index}
+                className={`flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 transition-all duration-300 ${
+                  index <= activeStep 
+                    ? 'border-purple-500 text-purple-500' 
+                    : 'border-gray-300 text-gray-400'
+                }`}
               >
-                <div className="flex justify-center mb-4">
-                  <div className="p-3 bg-gray-50 rounded-full">
-                    {step.icon}
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">{step.title}</h3>
-                <p className="text-gray-600 text-center">{step.description}</p>
-                
-                {/* Step number */}
-                <div className="absolute -top-3 -right-3 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                  {index + 1}
-                </div>
-                
-                {/* Arrow for mobile */}
-                {index < steps.length - 1 && (
-                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-blue-400 md:hidden">
-                    ↓
-                  </div>
-                )}
+                {index + 1}
               </div>
             ))}
           </div>
         </div>
         
-        <div className="mt-12 text-center">
-          <p className="text-gray-700 font-medium">
-            The more users correct predictions, the smarter our system becomes for everyone!
-          </p>
+        {/* Active step content */}
+        <div className="bg-white rounded-xl shadow-lg p-8 transition-all duration-500">
+          <div className="flex items-start space-x-6">
+            <div className="p-3 bg-purple-50 rounded-lg">
+              {steps[activeStep]?.icon || <Brain className="h-8 w-8 text-purple-500" />}
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">{steps[activeStep]?.title || "AI Learning Process"}</h3>
+              <p className="text-gray-600">{steps[activeStep]?.description || "Our AI system learns from your data to provide personalized recommendations."}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

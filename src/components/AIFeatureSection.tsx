@@ -1,6 +1,7 @@
 import React from 'react';
 import AIVisualization from './AIVisualization';
 import { Brain, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import ErrorBoundary from './ErrorBoundary';
 
 /**
  * A component that showcases the AI/ML features of the food expiry tracking system
@@ -53,7 +54,17 @@ export default function AIFeatureSection() {
         <div className="grid md:grid-cols-2 gap-8 items-center mb-16">
           {/* Visualization container with responsive height */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[300px] sm:h-[350px] md:h-[400px] order-2 md:order-1">
-            <AIVisualization />
+            <ErrorBoundary fallback={
+              <div className="w-full h-full flex flex-col items-center justify-center p-6">
+                <Brain className="w-16 h-16 text-blue-300 mb-4" />
+                <h3 className="text-lg font-semibold text-blue-600">AI-Powered Expiry Prediction</h3>
+                <p className="text-sm text-gray-600 text-center mt-2">
+                  Our neural network analyzes product data to predict optimal expiry dates
+                </p>
+              </div>
+            }>
+              <AIVisualization />
+            </ErrorBoundary>
           </div>
           
           <div className="space-y-6 order-1 md:order-2">

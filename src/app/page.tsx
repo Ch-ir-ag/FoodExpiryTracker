@@ -10,6 +10,7 @@ import DataFlowAnimation from '@/components/DataFlowAnimation';
 import AIHeroAnimation from '@/components/AIHeroAnimation';
 import AILearningProcess from '@/components/AILearningProcess';
 import AIWasteReductionStats from '@/components/AIWasteReductionStats';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Stats can be manually edited here
 const STATS = {
@@ -56,7 +57,9 @@ export default function Home() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200 rounded-full filter blur-3xl opacity-20 -z-10" />
         
         {/* AI Animation */}
-        <AIHeroAnimation />
+        <ErrorBoundary>
+          <AIHeroAnimation />
+        </ErrorBoundary>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
@@ -134,7 +137,9 @@ export default function Home() {
           
           {/* Data Flow Animation */}
           <div className="mb-16">
-            <DataFlowAnimation />
+            <ErrorBoundary>
+              <DataFlowAnimation />
+            </ErrorBoundary>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -166,7 +171,9 @@ export default function Home() {
       </section>
 
       {/* AI Feature Section */}
-      <AIFeatureSection />
+      <ErrorBoundary>
+        <AIFeatureSection />
+      </ErrorBoundary>
 
       {/* AI Learning Process Section */}
       <section className="py-16 bg-white">
@@ -180,7 +187,9 @@ export default function Home() {
             </p>
           </div>
           
-          <AILearningProcess />
+          <ErrorBoundary>
+            <AILearningProcess />
+          </ErrorBoundary>
         </div>
       </section>
 
@@ -285,7 +294,9 @@ export default function Home() {
             </p>
           </div>
           
-          <AIWasteReductionStats />
+          <ErrorBoundary>
+            <AIWasteReductionStats />
+          </ErrorBoundary>
         </div>
       </section>
 
