@@ -20,11 +20,11 @@ export class ReceiptProcessor {
     }
   }
 
-  static parseReceiptText(text: string): Receipt {
+  static async parseReceiptText(text: string): Promise<Receipt> {
     try {
       // Extract store information
       const storeMatch = text.match(/Dublin - ([^\n]+)/) || text.match(/LIDL/);
-      const store = storeMatch ? (storeMatch[1]?.trim() || 'LIDL') : '';
+      const store = storeMatch ? (storeMatch[1]?.trim() || 'LIDL') : 'LIDL'; // Default to LIDL
 
       // Extract date
       const dateMatch = text.match(/Date:\s*(\d{2}\/\d{2}\/\d{2})/) || text.match(/(\d{2})\/(\d{2})\/(\d{2})/);
@@ -43,7 +43,9 @@ export class ReceiptProcessor {
       // Extract items
       const items: ReceiptItem[] = [];
       const lines = text.split('\n');
+      const formattedDate = formatDateForDB(date);
       
+      // Process each line to extract items
       for (const line of lines) {
         const itemMatch = line.match(/^(.+?)\s+([\d.]+)\s+[ABC]$/) || 
                          line.match(/^(.+?)\s+(\d+\.\d{2})\s*[ABC]$/);
@@ -55,9 +57,9 @@ export class ReceiptProcessor {
             continue;
           }
           
-          const formattedDate = formatDateForDB(date);
-          const category = ShelfLifeService.categorizeProduct(name);
-          const estimatedExpiryDate = ShelfLifeService.calculateExpiryDate(name, formattedDate);
+          // Get category and expiry date using the new async methods
+          const category = await ShelfLifeService.categorizeProduct(name);
+          const estimatedExpiryDate = await ShelfLifeService.calculateExpiryDate(name, formattedDate);
           
           items.push({
             id: crypto.randomUUID(),

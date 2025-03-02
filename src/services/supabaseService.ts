@@ -252,12 +252,40 @@ export class SupabaseService {
         .eq('id', itemId);
 
       if (error) {
-        console.error('Error in deleteReceiptItem:', error);
         throw error;
       }
-      console.log('Successfully deleted item:', itemId);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error deleting receipt item:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update the expiry date of a receipt item
+   */
+  static async updateItemExpiryDate(
+    itemId: string, 
+    newExpiryDate: string,
+    userCorrected: boolean = false
+  ): Promise<void> {
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
+
+    try {
+      const { error } = await supabase
+        .from('receipt_items')
+        .update({
+          estimated_expiry_date: newExpiryDate,
+          user_corrected_expiry: userCorrected
+        })
+        .eq('id', itemId);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error updating item expiry date:', error);
       throw error;
     }
   }

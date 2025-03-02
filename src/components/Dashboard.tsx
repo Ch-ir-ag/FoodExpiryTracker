@@ -8,6 +8,7 @@ import { Trash2 } from 'lucide-react';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import toast from 'react-hot-toast';
 import ReceiptUploader from './ReceiptUploader';
+import ExpiryDateEditor from './ExpiryDateEditor';
 
 export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -238,6 +239,15 @@ export default function Dashboard() {
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          <span className="font-medium">Expiry date: </span>
+                          <ExpiryDateEditor
+                            itemId={item.id}
+                            itemName={item.name}
+                            currentExpiryDate={item.estimatedExpiryDate}
+                            onUpdate={loadReceipts}
+                          />
                         </div>
                       </div>
                     ))

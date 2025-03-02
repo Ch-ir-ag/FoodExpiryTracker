@@ -1,4 +1,6 @@
 import { ShelfLife } from '@/types';
+import { FoodDatabaseService } from './foodDatabaseService';
+import { addDays, format } from 'date-fns';
 
 // Comprehensive database of food categories and shelf lives
 const SHELF_LIFE_DATABASE: ShelfLife[] = [
@@ -199,123 +201,133 @@ const REGIONAL_ADJUSTMENTS: Record<string, number> = {
 export class ShelfLifeService {
   /**
    * Determine the most likely food category based on product name
+   * This is now a wrapper around the more sophisticated FoodDatabaseService
    */
-  static categorizeProduct(productName: string): string {
-    const normalizedName = productName.toLowerCase().trim();
-    
-    // Check for brand-specific categorization first
-    for (const [brand, category] of Object.entries(BRAND_CATEGORY_MAPPING)) {
-      if (normalizedName.includes(brand)) {
-        // Found a brand match, but still check if we can get more specific
-        for (const [specificCategory, keywords] of Object.entries(PRODUCT_KEYWORDS)) {
-          if (keywords.some(keyword => normalizedName.includes(keyword))) {
-            return specificCategory;
-          }
-        }
-        return category;
+  static async categorizeProduct(productName: string): Promise<string> {
+    try {
+      // Try to find a match in the dynamic database
+      const match = await FoodDatabaseService.findBestMatch(productName);
+      
+      if (match && match.confidence > 0.5) {
+        return match.product.category;
       }
+      
+      // Fallback to the original categorization logic
+      return this.legacyCategorizeProduct(productName);
+    } catch (error) {
+      console.error('Error in categorizeProduct:', error);
+      return this.legacyCategorizeProduct(productName);
     }
+  }
+  
+  /**
+   * Legacy categorization method (simplified version of the original)
+   */
+  private static legacyCategorizeProduct(productName: string): string {
+    const normalized = productName.toLowerCase().trim();
     
-    // Check for keyword matches
-    for (const [category, keywords] of Object.entries(PRODUCT_KEYWORDS)) {
-      if (keywords.some(keyword => normalizedName.includes(keyword))) {
-        return category;
-      }
+    // Simple keyword matching
+    if (normalized.includes('milk')) return 'milk';
+    if (normalized.includes('yogurt') || normalized.includes('yoghurt')) return 'yogurt';
+    if (normalized.includes('cheese')) {
+      if (normalized.includes('cream') || normalized.includes('soft')) return 'cheese-soft';
+      return 'cheese-hard';
     }
+    if (normalized.includes('butter')) return 'butter';
+    if (normalized.includes('cream')) return 'cream';
     
-    // Use NLP-like approach for partial matches
-    let bestCategory = 'default';
-    let highestScore = 0;
+    // LIDL specific products
+    if (normalized.includes('greek style yogurt')) return 'yogurt';
+    if (normalized.includes('white sub rolls')) return 'bread-packaged';
+    if (normalized.includes('tortilla wraps')) return 'tortilla-wraps';
     
-    for (const [category, keywords] of Object.entries(PRODUCT_KEYWORDS)) {
-      for (const keyword of keywords) {
-        // Calculate similarity score (simple version)
-        const words = normalizedName.split(' ');
-        const keywordWords = keyword.split(' ');
-        
-        let matchCount = 0;
-        for (const word of words) {
-          if (keywordWords.some(kw => word.includes(kw) || kw.includes(word))) {
-            matchCount++;
-          }
-        }
-        
-        const score = matchCount / words.length;
-        if (score > highestScore && score > 0.3) { // Threshold for partial match
-          highestScore = score;
-          bestCategory = category;
-        }
-      }
-    }
-    
-    // Apply special handling for LIDL products
-    return this.handleLidlSpecifics(productName, bestCategory);
+    return 'default';
   }
   
   /**
    * Get shelf life information for a product
+   * This now uses the dynamic database with fallback to the static one
    */
-  static getShelfLife(productName: string): ShelfLife {
-    const category = this.categorizeProduct(productName);
+  static async getShelfLife(productName: string): Promise<ShelfLife> {
+    try {
+      // Try to find a match in the dynamic database
+      const match = await FoodDatabaseService.findBestMatch(productName);
+      
+      if (match) {
+        return {
+          category: match.product.category,
+          daysToExpiry: match.product.daysToExpiry,
+          storageType: match.product.storageType
+        };
+      }
+      
+      // Fallback to the original method
+      return this.legacyGetShelfLife(productName);
+    } catch (error) {
+      console.error('Error in getShelfLife:', error);
+      return this.legacyGetShelfLife(productName);
+    }
+  }
+  
+  /**
+   * Legacy shelf life lookup method
+   */
+  private static legacyGetShelfLife(productName: string): ShelfLife {
+    const category = this.legacyCategorizeProduct(productName);
     
     // Find the shelf life data for this category
-    const shelfLifeData = SHELF_LIFE_DATABASE.find(item => item.category === category) || 
-                          SHELF_LIFE_DATABASE.find(item => item.category === 'default')!;
-    
-    // Apply regional adjustments if applicable
-    let adjustedDaysToExpiry = shelfLifeData.daysToExpiry;
-    if (REGIONAL_ADJUSTMENTS[category]) {
-      adjustedDaysToExpiry += REGIONAL_ADJUSTMENTS[category];
-    }
-    
-    return {
-      ...shelfLifeData,
-      daysToExpiry: adjustedDaysToExpiry
-    };
+    return SHELF_LIFE_DATABASE.find(item => item.category === category) || 
+           SHELF_LIFE_DATABASE.find(item => item.category === 'default')!;
   }
   
   /**
    * Calculate estimated expiry date based on product name and purchase date
+   * Now uses the dynamic database with learning capabilities
    */
-  static calculateExpiryDate(productName: string, purchaseDate: string): string {
-    const shelfLife = this.getShelfLife(productName);
-    
-    const purchaseDateTime = new Date(purchaseDate);
-    const expiryDate = new Date(purchaseDateTime);
-    expiryDate.setDate(purchaseDateTime.getDate() + shelfLife.daysToExpiry);
-    
-    return expiryDate.toISOString().split('T')[0];
+  static async calculateExpiryDate(productName: string, purchaseDate: string): Promise<string> {
+    try {
+      const shelfLife = await this.getShelfLife(productName);
+      
+      const purchaseDateTime = new Date(purchaseDate);
+      const expiryDate = addDays(purchaseDateTime, shelfLife.daysToExpiry);
+      
+      return format(expiryDate, 'yyyy-MM-dd');
+    } catch (error) {
+      console.error('Error calculating expiry date:', error);
+      
+      // Fallback to a simple default expiry date (7 days)
+      const purchaseDateTime = new Date(purchaseDate);
+      const expiryDate = addDays(purchaseDateTime, 7);
+      return format(expiryDate, 'yyyy-MM-dd');
+    }
   }
 
   /**
-   * Special handling for LIDL receipt items
+   * Update the expiry date for a product based on user feedback
+   * This allows the system to learn and improve over time
    */
-  static handleLidlSpecifics(productName: string, category: string): string {
-    const normalizedName = productName.toLowerCase().trim();
-    
-    // Handle LIDL's specific product naming
-    if (normalizedName.includes('x') && /\d+\s*x/.test(normalizedName)) {
-      // This is likely a quantity indicator (e.g., "2 x 0.79")
-      // Extract the actual product name
-      const actualProduct = normalizedName.replace(/\d+\s*x\s*[\d.]+/, '').trim();
-      if (actualProduct) {
-        return this.categorizeProduct(actualProduct);
-      }
+  static async updateExpiryDate(
+    productName: string,
+    originalExpiryDate: string,
+    correctedExpiryDate: string
+  ): Promise<void> {
+    try {
+      const originalDate = new Date(originalExpiryDate);
+      const correctedDate = new Date(correctedExpiryDate);
+      const purchaseDate = new Date(); // Approximate purchase date
+      
+      // Calculate days difference
+      const originalDaysToExpiry = Math.round((originalDate.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
+      const correctedDaysToExpiry = Math.round((correctedDate.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Learn from this correction
+      await FoodDatabaseService.learnFromCorrection(
+        productName,
+        originalDaysToExpiry,
+        correctedDaysToExpiry
+      );
+    } catch (error) {
+      console.error('Error updating expiry date:', error);
     }
-    
-    // Handle specific LIDL products from the receipt
-    if (normalizedName.includes('greek style yogurt')) {
-      return 'greek-yogurt';
-    } else if (normalizedName.includes('white sub rolls')) {
-      return 'white-rolls';
-    } else if (normalizedName.includes('tortilla wraps')) {
-      return 'tortilla-wraps';
-    } else if (normalizedName.includes('hazelnuts')) {
-      return 'hazelnuts';
-    } else if (normalizedName.includes('hazelnut') && normalizedName.includes('chocolate')) {
-      return 'chocolate';
-    }
-    
-    return category;
   }
 } 
