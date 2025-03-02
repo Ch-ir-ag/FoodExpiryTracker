@@ -64,10 +64,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
             <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
-                <Sparkles className="h-4 w-4 mr-1" />
-                <span className="whitespace-nowrap">AI-Powered Food Management</span>
-              </div>
+
               <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                 Never Let Your Food
                 <span className="text-blue-600"> Go to Waste </span>
