@@ -95,7 +95,7 @@ export default function AILearningProcess() {
 
   return (
     <div ref={componentRef} className="py-12">
-      <h2 className="text-3xl font-bold text-center mb-12">How Our AI Learns</h2>
+      <h2 className="text-3xl font-bold text-center mb-12 text-black">How Our AI Learns</h2>
       
       <div className="max-w-4xl mx-auto">
         {/* Progress bar */}
@@ -116,6 +116,10 @@ export default function AILearningProcess() {
                     ? 'border-purple-500 text-purple-500' 
                     : 'border-gray-300 text-gray-400'
                 }`}
+                style={{ 
+                  transform: 'translateY(-50%)',
+                  boxShadow: '0 0 0 4px white'
+                }}
               >
                 {index + 1}
               </div>
@@ -130,7 +134,7 @@ export default function AILearningProcess() {
               {steps[activeStep]?.icon || <Brain className="h-8 w-8 text-purple-500" />}
             </div>
             <div>
-              <h3 className="text-xl font-bold mb-2">{steps[activeStep]?.title || "AI Learning Process"}</h3>
+              <h3 className="text-xl font-bold mb-2 text-gray-900">{steps[activeStep]?.title || "AI Learning Process"}</h3>
               <p className="text-gray-600">{steps[activeStep]?.description || "Our AI system learns from your data to provide personalized recommendations."}</p>
             </div>
           </div>

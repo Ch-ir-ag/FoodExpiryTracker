@@ -211,8 +211,10 @@ export default function Home() {
                   Sign up for free and set up your personal food tracking dashboard
                 </p>
               </div>
-              <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
-                <ArrowRight className="w-6 h-6 text-gray-400" />
+              <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="bg-white rounded-full p-1 shadow-sm">
+                  <ArrowRight className="w-6 h-6 text-blue-500" />
+                </div>
               </div>
             </div>
 
@@ -226,8 +228,10 @@ export default function Home() {
                   Upload your digital LIDL receipts to automatically add items
                 </p>
               </div>
-              <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
-                <ArrowRight className="w-6 h-6 text-gray-400" />
+              <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="bg-white rounded-full p-1 shadow-sm">
+                  <ArrowRight className="w-6 h-6 text-blue-500" />
+                </div>
               </div>
             </div>
 
