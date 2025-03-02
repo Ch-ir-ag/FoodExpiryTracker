@@ -51,18 +51,19 @@ export default function AIFeatureSection() {
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 items-center mb-16">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[400px]">
+          {/* Visualization container with responsive height */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-[300px] sm:h-[350px] md:h-[400px] order-2 md:order-1">
             <AIVisualization />
           </div>
           
-          <div className="space-y-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
+          <div className="space-y-6 order-1 md:order-2">
+            <div className="flex flex-col sm:flex-row">
+              <div className="flex-shrink-0 mb-4 sm:mb-0">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <Sparkles className="h-6 w-6" />
                 </div>
               </div>
-              <div className="ml-4">
+              <div className="sm:ml-4">
                 <h3 className="text-lg font-medium text-gray-900">Smart Expiry Prediction</h3>
                 <p className="mt-2 text-base text-gray-500">
                   Our AI analyzes thousands of food products to accurately predict when your items will expire,
@@ -71,13 +72,13 @@ export default function AIFeatureSection() {
               </div>
             </div>
             
-            <div className="flex">
-              <div className="flex-shrink-0">
+            <div className="flex flex-col sm:flex-row">
+              <div className="flex-shrink-0 mb-4 sm:mb-0">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <TrendingUp className="h-6 w-6" />
                 </div>
               </div>
-              <div className="ml-4">
+              <div className="sm:ml-4">
                 <h3 className="text-lg font-medium text-gray-900">Learning From Your Habits</h3>
                 <p className="mt-2 text-base text-gray-500">
                   The system learns from your shopping patterns and consumption habits to continuously
@@ -86,13 +87,13 @@ export default function AIFeatureSection() {
               </div>
             </div>
             
-            <div className="flex">
-              <div className="flex-shrink-0">
+            <div className="flex flex-col sm:flex-row">
+              <div className="flex-shrink-0 mb-4 sm:mb-0">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
                   <Zap className="h-6 w-6" />
                 </div>
               </div>
-              <div className="ml-4">
+              <div className="sm:ml-4">
                 <h3 className="text-lg font-medium text-gray-900">Automated Receipt Processing</h3>
                 <p className="mt-2 text-base text-gray-500">
                   Our advanced OCR and natural language processing algorithms automatically extract
@@ -113,11 +114,11 @@ export default function AIFeatureSection() {
           ].map((stat, index) => (
             <div 
               key={index}
-              className="bg-white/80 backdrop-blur-sm rounded-xl p-6 text-center shadow-sm border border-blue-100
+              className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 text-center shadow-sm border border-blue-100
                 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1"
             >
-              <div className="text-3xl font-bold text-blue-600 mb-2">{stat.value}</div>
-              <div className="text-sm text-gray-600">{stat.label}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-1 sm:mb-2">{stat.value}</div>
+              <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
             </div>
           ))}
         </div>

@@ -21,6 +21,13 @@ export default function AIVisualization() {
       
       canvas.width = parent.clientWidth;
       canvas.height = parent.clientHeight;
+      
+      // Clear existing nodes and connections when resizing
+      nodes.length = 0;
+      connections.length = 0;
+      
+      // Recreate neural network with appropriate density for screen size
+      createNeuralNetwork();
     };
     
     setCanvasDimensions();
@@ -56,7 +63,7 @@ export default function AIVisualization() {
     
     // Create neural network structure
     const createNeuralNetwork = () => {
-      const layers = [4, 8, 6, 2]; // Number of nodes in each layer
+      const layers = [3, 6, 4, 2]; // Simplified for mobile: reduced number of nodes in each layer
       const layerSpacing = canvas.width / (layers.length + 1);
       const colors = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'];
       
@@ -70,7 +77,7 @@ export default function AIVisualization() {
           const node: Node = {
             x: layerX,
             y: (n + 1) * nodeSpacing,
-            radius: 4 + Math.random() * 2,
+            radius: 3 + Math.random() * 2, // Slightly smaller nodes for mobile
             color: colors[l % colors.length],
             pulseRadius: 0,
             pulseOpacity: 0,
@@ -85,6 +92,9 @@ export default function AIVisualization() {
           if (l > 0) {
             const prevLayer = nodes.filter(n => n.layer === l - 1);
             for (const prevNode of prevLayer) {
+              // Reduce connections on smaller screens
+              if (canvas.width < 500 && Math.random() > 0.7) continue;
+              
               connections.push({
                 from: prevNode,
                 to: node,
@@ -236,9 +246,9 @@ export default function AIVisualization() {
         className="absolute inset-0 w-full h-full"
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-blue-600">AI-Powered Expiry Prediction</h3>
-          <p className="text-sm text-gray-600">Our neural network learns from your shopping habits</p>
+        <div className="text-center px-3 sm:px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm max-w-[90%] sm:max-w-[80%]">
+          <h3 className="text-base sm:text-lg font-semibold text-blue-600">AI-Powered Expiry Prediction</h3>
+          <p className="text-xs sm:text-sm text-gray-600">Our neural network learns from your shopping habits</p>
         </div>
       </div>
     </div>
