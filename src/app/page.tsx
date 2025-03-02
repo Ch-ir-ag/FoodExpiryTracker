@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Auth from '@/components/Auth';
 import Dashboard from '@/components/Dashboard';
 import { supabase } from '@/lib/supabase';
-import { ArrowRight, Receipt, Barcode, BarChart } from 'lucide-react';
+import { ArrowRight, Receipt, Upload, BarChart } from 'lucide-react';
 
 // Stats can be manually edited here
 const STATS = {
@@ -87,7 +87,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4 mb-8 max-w-lg mx-auto lg:mx-0">
                 {[
                   'Smart Expiry Tracking',
-                  'Receipt Scanning',
+                  'Digital Receipt Upload',
                   'Timely Reminders',
                   'Waste Analytics'
                 ].map((feature) => (
@@ -120,17 +120,17 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <Receipt className="w-12 h-12 text-blue-500 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Receipt Scanning</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Digital Receipt Upload</h3>
               <p className="text-gray-600">
-                Upload your receipt and let our AI extract all the important details automatically
+                Upload your digital receipts and let our AI extract all the important details automatically
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <Barcode className="w-12 h-12 text-blue-500 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Barcode Scanning</h3>
+              <Upload className="w-12 h-12 text-blue-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Easy Import</h3>
               <p className="text-gray-600">
-                Quickly add items by scanning their barcodes for instant product recognition
+                Quickly import your LIDL digital receipts with just a few clicks
               </p>
             </div>
 
@@ -176,9 +176,9 @@ export default function Home() {
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                   <span className="text-xl font-bold text-blue-600">2</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Scan & Upload</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Receipts</h3>
                 <p className="text-gray-600">
-                  Upload your receipt or scan product barcodes to add items
+                  Upload your digital LIDL receipts to automatically add items
                 </p>
               </div>
               <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
@@ -209,37 +209,26 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Works With Your
-              <span className="text-blue-600"> Favorite </span>
-              Stores
+              Exclusively for
+              <span className="text-blue-600"> LIDL </span>
+              Shoppers
             </h2>
             <p className="text-lg text-gray-600 mb-12">
-              Easily scan receipts from major retailers across Ireland
+              Optimized for LIDL digital receipts to provide the best experience
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-center max-w-4xl mx-auto">
-              {[
-                'LIDL',
-                'Dunnes',
-                'M&S',
-                'SuperValu'
-              ].map((store, index) => (
-                <div 
-                  key={store}
-                  className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 
-                    transition-all duration-500 hover:shadow-xl hover:-translate-y-1
-                    animate-fade-in"
-                  style={{
-                    animationDelay: `${index * 150}ms`
-                  }}
+            <div className="flex justify-center items-center max-w-4xl mx-auto">
+              <div 
+                className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 
+                  transition-all duration-500 hover:shadow-xl hover:-translate-y-1
+                  animate-fade-in"
+              >
+                <span className="block text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 
+                  bg-clip-text text-transparent opacity-75 group-hover:opacity-100 
+                  transform transition-all duration-500 group-hover:scale-110"
                 >
-                  <span className="block text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 
-                    bg-clip-text text-transparent opacity-75 group-hover:opacity-100 
-                    transform transition-all duration-500 group-hover:scale-110"
-                  >
-                    {store}
-                  </span>
-                </div>
-              ))}
+                  LIDL
+                </span>
+              </div>
             </div>
           </div>
         </div>
