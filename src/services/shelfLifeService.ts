@@ -92,7 +92,7 @@ const SHELF_LIFE_DATABASE: ShelfLife[] = [
 ];
 
 // Product name keywords mapping to categories - kept for reference but not actively used
-// @ts-ignore
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const _PRODUCT_KEYWORDS: Record<string, string[]> = {
   'milk': ['milk', 'dairy milk', 'whole milk', 'semi skimmed', 'skimmed', 'almond milk', 'soy milk', 'oat milk'],
   'yogurt': ['yogurt', 'yoghurt', 'greek yogurt', 'yogurt drink', 'activia', 'yoplait', 'muller'],
@@ -165,9 +165,10 @@ const _PRODUCT_KEYWORDS: Record<string, string[]> = {
   'lidl-fresh-fish': ['lidl fresh fish', 'fish counter', 'seafood counter'],
   'lidl-dairy': ['lidl dairy', 'dairy section'],
 };
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 // Brand-specific category mapping - kept for reference but not actively used
-// @ts-ignore
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const _BRAND_CATEGORY_MAPPING: Record<string, string> = {
   'lurpak': 'butter',
   'flora': 'butter',
@@ -195,11 +196,11 @@ const _BRAND_CATEGORY_MAPPING: Record<string, string> = {
 };
 
 // Regional adjustments - kept for reference but not actively used
-// @ts-ignore
 const _REGIONAL_ADJUSTMENTS: Record<string, number> = {
   'milk': 1, // Add 1 day to milk shelf life in Ireland (example)
   'bread-fresh': -1, // Reduce by 1 day due to humidity (example)
 };
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 export class ShelfLifeService {
   /**
