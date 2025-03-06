@@ -14,8 +14,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Stats can be manually edited here
 const STATS = {
-  users: 15,  // Edit this number to update total users
-  pilots: 2    // Edit this number to update active pilots
+  users: 350,  // Edit this number to update total users
+  pilots: 20    // Edit this number to update active pilots
 };
 
 export default function Home() {
