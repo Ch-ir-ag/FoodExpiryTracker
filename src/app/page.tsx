@@ -197,7 +197,7 @@ export default function Home() {
             How It Works
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Get started with FoodTracker in three simple steps
+            Get started with Fresity in three simple steps
           </p>
           
           <div className="grid md:grid-cols-3 gap-8">
