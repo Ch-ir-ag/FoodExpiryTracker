@@ -48,7 +48,7 @@ export default function WaitlistForm({ onSwitchToPilot }: Props) {
   };
 
   return (
-    <div className="relative z-10">
+    <div>
       <h2 className="text-3xl font-semibold text-gray-800 mb-4">
         Join the Waitlist
       </h2>
@@ -77,23 +77,6 @@ export default function WaitlistForm({ onSwitchToPilot }: Props) {
           className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Joining...' : 'Join Waitlist'}
-        </button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">or</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onSwitchToPilot}
-          className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium"
-        >
-          Have a pilot code? Sign up here
         </button>
       </form>
     </div>

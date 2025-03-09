@@ -1,6 +1,8 @@
 import { ShelfLife } from '@/types';
 import { FoodDatabaseService } from './foodDatabaseService';
 import { addDays, format } from 'date-fns';
+import { supabase } from '@/lib/supabase';
+import { LlmExpiryService } from './llmExpiryService';
 
 // Comprehensive database of food categories and shelf lives
 const SHELF_LIFE_DATABASE: ShelfLife[] = [
@@ -285,30 +287,106 @@ export class ShelfLifeService {
   }
   
   /**
-   * Calculate estimated expiry date based on product name and purchase date
-   * Now uses the dynamic database with learning capabilities
+   * Calculate the expiry date for a product based on its name and purchase date
    */
-  static async calculateExpiryDate(productName: string, purchaseDate: string): Promise<string> {
-    try {
-      const shelfLife = await this.getShelfLife(productName);
-      
-      const purchaseDateTime = new Date(purchaseDate);
-      const expiryDate = addDays(purchaseDateTime, shelfLife.daysToExpiry);
-      
-      return format(expiryDate, 'yyyy-MM-dd');
-    } catch (error) {
-      console.error('Error calculating expiry date:', error);
-      
-      // Fallback to a simple default expiry date (7 days)
-      const purchaseDateTime = new Date(purchaseDate);
-      const expiryDate = addDays(purchaseDateTime, 7);
-      return format(expiryDate, 'yyyy-MM-dd');
+  static async calculateExpiryDate(
+    productName: string,
+    purchaseDate: string
+  ): Promise<string> {
+    console.log(`Calculating expiry date for ${productName} (purchased: ${purchaseDate})`);
+    
+    // First look for exact matches in our database
+    console.log(`Looking for exact match: ${productName.toLowerCase()}`);
+    
+    if (supabase) {
+      try {
+        // Normalize the product name for better matching
+        const normalizedName = productName.toLowerCase().trim();
+        
+        // Look for exact product name match first
+        const { data: exactMatches, error: exactError } = await supabase
+          .from('receipt_items')
+          .select('name, estimated_expiry_date, purchase_date')
+          .eq('user_corrected_expiry', true)
+          .ilike('name', normalizedName)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+          
+        if (!exactError && exactMatches && exactMatches.length > 0) {
+          const match = exactMatches[0];
+          console.log(`Found exact match for "${productName}": ${match.name}`);
+          
+          // Calculate how many days from purchase to expiry in the matched item
+          const purchaseDateObj = new Date(match.purchase_date);
+          const expiryDateObj = new Date(match.estimated_expiry_date);
+          const daysToExpiry = Math.round((expiryDateObj.getTime() - purchaseDateObj.getTime()) / (1000 * 60 * 60 * 24));
+          
+          console.log(`Previous correction: ${daysToExpiry} days until expiry`);
+          
+          // Apply the same shelf life to the new purchase
+          const newPurchaseDateObj = new Date(purchaseDate);
+          const newExpiryDate = addDays(newPurchaseDateObj, daysToExpiry);
+          
+          return format(newExpiryDate, 'yyyy-MM-dd');
+        }
+      } catch (err) {
+        console.error('Error checking for user corrections:', err);
+        // Continue to fallback methods
+      }
     }
+    
+    // Try the LLM prediction if enabled
+    const USE_LLM_PREDICTION = true; // Set to false to disable LLM and use only classification
+    
+    if (USE_LLM_PREDICTION) {
+      try {
+        // Get category for additional context
+        const category = this.getCategoryFromProductName(productName);
+        
+        // Call the LLM service with product details
+        const llmPrediction = await LlmExpiryService.predictExpiryDays(
+          productName,
+          {
+            category,
+            purchaseDate,
+            isRefrigerated: this.isRefrigeratedProduct(productName),
+          }
+        );
+        
+        console.log(`LLM prediction for ${productName}: ${llmPrediction.predictedExpiryDays} days (confidence: ${llmPrediction.confidence})`);
+        console.log(`Reasoning: ${llmPrediction.reasoning}`);
+        
+        // Only use LLM prediction if confidence is high enough
+        if (llmPrediction.confidence >= 0.6) {
+          // Calculate the expiry date based on purchase date + predicted days
+          const purchaseDateObj = new Date(purchaseDate);
+          const expiryDateObj = new Date(purchaseDateObj);
+          expiryDateObj.setDate(purchaseDateObj.getDate() + llmPrediction.predictedExpiryDays);
+          
+          return expiryDateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        } else {
+          console.log(`LLM confidence too low (${llmPrediction.confidence}), falling back to classification`);
+        }
+      } catch (error) {
+        console.error('Error using LLM prediction, falling back to classification:', error);
+      }
+    }
+    
+    // Fallback to standard classification method
+    console.log('No user corrections or LLM prediction, using category-based shelf life');
+    const category = await this.categorizeProduct(productName);
+    const shelfLife = SHELF_LIFE_DATABASE.find(item => item.category === category) ||
+                      SHELF_LIFE_DATABASE.find(item => item.category === 'default')!;
+    
+    const purchaseDateTime = new Date(purchaseDate);
+    const expiryDate = addDays(purchaseDateTime, shelfLife.daysToExpiry);
+    
+    return format(expiryDate, 'yyyy-MM-dd');
   }
 
   /**
    * Update the expiry date for a product based on user feedback
-   * This allows the system to learn and improve over time
+   * This method is now simplified as we use direct lookups in calculateExpiryDate
    */
   static async updateExpiryDate(
     productName: string,
@@ -316,22 +394,65 @@ export class ShelfLifeService {
     correctedExpiryDate: string
   ): Promise<void> {
     try {
-      const originalDate = new Date(originalExpiryDate);
-      const correctedDate = new Date(correctedExpiryDate);
-      const purchaseDate = new Date(); // Approximate purchase date
-      
-      // Calculate days difference
-      const originalDaysToExpiry = Math.round((originalDate.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
-      const correctedDaysToExpiry = Math.round((correctedDate.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      // Learn from this correction
-      await FoodDatabaseService.learnFromCorrection(
+      console.log('Expiry date correction recorded:', {
         productName,
-        originalDaysToExpiry,
-        correctedDaysToExpiry
-      );
+        originalExpiryDate,
+        correctedExpiryDate
+      });
+      
+      // We no longer need complex model training logic here
+      // The correction is stored in the receipt_items table with user_corrected_expiry=true
+      // Future calculations will use these corrections directly
     } catch (error) {
-      console.error('Error updating expiry date:', error);
+      console.error('Error logging expiry date correction:', error);
     }
+  }
+
+  /**
+   * Determine if a product is refrigerated based on its name
+   */
+  private static isRefrigeratedProduct(productName: string): boolean {
+    const name = productName.toLowerCase();
+    
+    // Common refrigerated items
+    if (
+      name.includes('milk') ||
+      name.includes('yogurt') ||
+      name.includes('yoghurt') ||
+      name.includes('cheese') ||
+      name.includes('butter') ||
+      name.includes('meat') ||
+      name.includes('fish') ||
+      name.includes('seafood') ||
+      name.includes('egg') ||
+      name.includes('cream')
+    ) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Get category from product name for additional context
+   */
+  private static getCategoryFromProductName(productName: string): string {
+    const name = productName.toLowerCase();
+    
+    if (name.includes('milk')) return 'Dairy - Milk';
+    if (name.includes('yogurt') || name.includes('yoghurt')) return 'Dairy - Yogurt';
+    if (name.includes('cheese')) return 'Dairy - Cheese';
+    if (name.includes('bread') || name.includes('loaf')) return 'Bakery - Bread';
+    if (name.includes('meat')) return 'Meat';
+    if (name.includes('chicken')) return 'Meat - Poultry';
+    if (name.includes('beef')) return 'Meat - Beef';
+    if (name.includes('pork')) return 'Meat - Pork';
+    if (name.includes('fish')) return 'Seafood';
+    if (name.includes('apple') || name.includes('banana') || name.includes('fruit')) return 'Fruit';
+    if (name.includes('vegetable') || name.includes('carrot') || name.includes('potato')) return 'Vegetables';
+    if (name.includes('egg')) return 'Eggs';
+    if (name.includes('chocolate')) return 'Confectionery';
+    
+    return 'General Grocery';
   }
 } 

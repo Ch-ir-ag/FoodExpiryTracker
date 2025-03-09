@@ -4,14 +4,15 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import WaitlistForm from './WaitlistForm';
 
+type AuthTab = 'waitlist' | 'pilotSignup' | 'pilotSignin';
+
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pilotCode, setPilotCode] = useState('');
-  const [isSignUp, setIsSignUp] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPilotForm, setShowPilotForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<AuthTab>('waitlist');
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ export default function Auth() {
         throw new Error('Unable to connect to authentication service');
       }
 
-      if (isSignUp) {
+      if (activeTab === 'pilotSignup') {
         if (pilotCode !== 'PILOT') {
           throw new Error('Invalid pilot code. Please try again.');
         }
@@ -56,88 +57,169 @@ export default function Auth() {
     }
   };
 
-  if (!showPilotForm) {
-    return <WaitlistForm onSwitchToPilot={() => setShowPilotForm(true)} />;
-  }
-
   return (
     <div className="relative z-10">
-      <div className="flex items-center gap-2 mb-8">
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-200 mb-8">
         <button
-          onClick={() => setShowPilotForm(false)}
-          className="text-blue-600 hover:text-blue-700"
+          onClick={() => setActiveTab('waitlist')}
+          className={`py-3 px-6 font-medium text-sm ${
+            activeTab === 'waitlist'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
         >
-          ← Back
+          Join Waitlist
         </button>
-        <h2 className="text-3xl font-semibold text-gray-800">
-          Pilot Access
-        </h2>
+        <button
+          onClick={() => setActiveTab('pilotSignup')}
+          className={`py-3 px-6 font-medium text-sm ${
+            activeTab === 'pilotSignup'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Pilot Sign Up
+        </button>
+        <button
+          onClick={() => setActiveTab('pilotSignin')}
+          className={`py-3 px-6 font-medium text-sm ${
+            activeTab === 'pilotSignin'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Pilot Sign In
+        </button>
       </div>
-      
-      <form onSubmit={handleAuth} className="space-y-6">
+
+      {/* Waitlist Form */}
+      {activeTab === 'waitlist' && (
+        <WaitlistForm onSwitchToPilot={() => setActiveTab('pilotSignup')} />
+      )}
+
+      {/* Pilot Sign Up Form */}
+      {activeTab === 'pilotSignup' && (
         <div>
-          <label htmlFor="pilotCode" className="block text-base text-gray-700 mb-2">
-            Pilot Code
-          </label>
-          <input
-            id="pilotCode"
-            type="text"
-            value={pilotCode}
-            onChange={(e) => setPilotCode(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-            placeholder="Enter your pilot code"
-            required
-          />
-        </div>
+          <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+            Pilot Sign Up
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Create an account to access our pilot program.
+          </p>
+          
+          <form onSubmit={handleAuth} className="space-y-6">
+            <div>
+              <label htmlFor="pilotCode" className="block text-base text-gray-700 mb-2">
+                Pilot Code
+              </label>
+              <input
+                id="pilotCode"
+                type="text"
+                value={pilotCode}
+                onChange={(e) => setPilotCode(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                placeholder="Enter your pilot code"
+                required
+              />
+            </div>
 
+            <div>
+              <label htmlFor="email" className="block text-base text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-base text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="text-red-500 text-sm py-2">{error}</div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Processing...' : 'Sign Up'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Pilot Sign In Form */}
+      {activeTab === 'pilotSignin' && (
         <div>
-          <label htmlFor="email" className="block text-base text-gray-700 mb-2">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-            required
-          />
+          <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+            Pilot Sign In
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Sign in to access your pilot account.
+          </p>
+          
+          <form onSubmit={handleAuth} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-base text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-base text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="text-red-500 text-sm py-2">{error}</div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Processing...' : 'Sign In'}
+            </button>
+          </form>
         </div>
-        
-        <div>
-          <label htmlFor="password" className="block text-base text-gray-700 mb-2">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-            required
-          />
-        </div>
-
-        {error && (
-          <div className="text-red-500 text-sm py-2">{error}</div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium"
-        >
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-        </button>
-      </form>
+      )}
     </div>
   );
 } 

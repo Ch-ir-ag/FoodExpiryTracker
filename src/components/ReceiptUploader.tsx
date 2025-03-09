@@ -41,6 +41,11 @@ export default function ReceiptUploader() {
         await SupabaseService.saveReceipt(processedReceipt);
         setReceipt(processedReceipt);
         toast.success('Receipt processed successfully');
+        
+        // Fix the redirect to use the correct path - likely just '/' instead of '/dashboard'
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
       } catch (saveError: unknown) {
         console.error('Save error:', saveError);
         setSaveError(

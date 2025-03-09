@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Receipt } from '@/types';
 import { SupabaseService } from '@/services/supabaseService';
 import { differenceInDays } from 'date-fns';
@@ -8,40 +8,68 @@ import { Trash2 } from 'lucide-react';
 import { formatDateForDisplay } from '@/utils/dateUtils';
 import toast from 'react-hot-toast';
 import ReceiptUploader from './ReceiptUploader';
-import ExpiryDateEditor from './ExpiryDateEditor';
 
 export default function Dashboard() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     loadReceipts();
     
-    // Refresh receipts every 30 seconds
-    const interval = setInterval(loadReceipts, 30000);
+    // Set up interval to refresh receipts periodically
+    const intervalId = setInterval(loadReceipts, 5 * 60 * 1000); // Every 5 minutes
     
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
+    return () => {
+      isMounted.current = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   const loadReceipts = async () => {
-    try {
+    if (isMounted.current) {
       setLoading(true);
-      const receipts = await SupabaseService.getReceipts();
-      setReceipts(receipts);
-    } catch (error) {
-      console.error('Error loading receipts:', error);
-    } finally {
-      setLoading(false);
+      try {
+        console.log('Loading receipts...');
+        const data = await SupabaseService.getReceipts(true); // Pass true for forceRefresh
+        if (isMounted.current) {
+          setReceipts(data);
+        }
+      } catch (error) {
+        console.error('Error loading receipts:', error);
+      } finally {
+        if (isMounted.current) {
+          setLoading(false);
+        }
+      }
     }
   };
 
   const getExpiryText = (expiryDate: string) => {
     const daysLeft = differenceInDays(new Date(expiryDate), new Date());
+    
     if (daysLeft < 0) return 'Expired';
     if (daysLeft === 0) return 'Expires today';
     if (daysLeft === 1) return '1 day left';
+    
+    // Convert to months for longer periods
+    if (daysLeft > 30) {
+      const months = Math.floor(daysLeft / 30);
+      const remainingDays = daysLeft % 30;
+      
+      if (months === 1) {
+        return remainingDays > 0 
+          ? `1 month, ${remainingDays} days left` 
+          : '1 month left';
+      }
+      
+      return remainingDays > 0 
+        ? `${months} months, ${remainingDays} days left` 
+        : `${months} months left`;
+    }
+    
     return `${daysLeft} days left`;
   };
 
@@ -242,12 +270,7 @@ export default function Dashboard() {
                         </div>
                         <div className="mt-2 text-xs text-gray-500">
                           <span className="font-medium">Expiry date: </span>
-                          <ExpiryDateEditor
-                            itemId={item.id}
-                            itemName={item.name}
-                            currentExpiryDate={item.estimatedExpiryDate}
-                            onUpdate={loadReceipts}
-                          />
+                          <span>{formatDateForDisplay(item.estimatedExpiryDate)}</span>
                         </div>
                       </div>
                     ))

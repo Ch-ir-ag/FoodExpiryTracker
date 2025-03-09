@@ -13,13 +13,23 @@ export default function Navbar() {
   };
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const absoluteTop = rect.top + scrollTop;
+        
+        window.scrollTo({
+          top: absoluteTop - 80,
+          behavior: 'smooth'
+        });
+        
+        console.log(`Scrolling to section: ${sectionId} at position ${absoluteTop - 80}`);
+      } else {
+        console.warn(`Element with id "${sectionId}" not found`);
+      }
+    }, 100);
   };
 
   return (
