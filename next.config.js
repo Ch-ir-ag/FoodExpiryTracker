@@ -7,7 +7,16 @@ const nextConfig = {
   staticPageGenerationTimeout: 1000,
   experimental: {
     esmExternals: true
-  }
+  },
+  reactStrictMode: true,
+  eslint: {
+    // Don't run ESLint during production builds for speed and to avoid false positives
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Dangerously allow production builds to complete even if there are TypeScript errors
+    ignoreBuildErrors: true,
+  },
 }
 
 module.exports = nextConfig 

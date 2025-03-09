@@ -8,7 +8,7 @@ interface Props {
   onSwitchToPilot: () => void;
 }
 
-export default function WaitlistForm({ onSwitchToPilot }: Props) {
+export default function WaitlistForm({ onSwitchToPilot: _onSwitchToPilot }: Props) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 

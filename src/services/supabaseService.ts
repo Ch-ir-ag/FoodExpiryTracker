@@ -120,7 +120,7 @@ export class SupabaseService {
    * Get all receipts for the current user
    * @param forceRefresh If true, adds cache busting to ensure fresh data
    */
-  static async getReceipts(forceRefresh = true): Promise<Receipt[]> {
+  static async getReceipts(_forceRefresh = true): Promise<Receipt[]> {
     if (!supabase) {
       throw new Error('Supabase client not initialized');
     }
@@ -163,7 +163,7 @@ export class SupabaseService {
       // Log all received expiry dates for debugging
       console.log("RECEIVED EXPIRY DATES FROM DATABASE:");
       receipts.forEach(receipt => {
-        receipt.items.forEach(item => {
+        receipt.items.forEach((item: any) => {
           console.log(`${item.name}: ${item.estimated_expiry_date} (corrected: ${item.user_corrected_expiry})`);
         });
       });
@@ -421,7 +421,6 @@ export class SupabaseService {
           
           // Approach 3: Raw update with forced cache busting
           console.log('Approach 3: Raw update with cache busting...');
-          const timestamp = new Date().getTime();
           const { error: updateError3 } = await supabase
             .from('receipt_items')
             .update({
@@ -462,10 +461,7 @@ export class SupabaseService {
       try {
         console.log('🔍 Verifying update...');
         
-        // Force cache refresh with timestamp
-        const timestamp = new Date().getTime();
-        
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from('receipt_items')
           .select('estimated_expiry_date, user_corrected_expiry')
           .eq('id', id)
@@ -518,7 +514,8 @@ export class SupabaseService {
       if (funcCheckError || !funcCheck) {
         console.log('Function emergency_update_expiry does not exist, creating it now...');
         
-        // Create the function dynamically
+        // Comment out or remove the unused variable
+        /* 
         const createFunctionSQL = `
           CREATE OR REPLACE FUNCTION emergency_update_expiry(
             p_item_id UUID,
@@ -555,6 +552,7 @@ export class SupabaseService {
           END;
           $$;
         `;
+        */
         
         // This would need to be run by a Supabase admin or via a migration
         console.log('Cannot create function dynamically, need admin rights');
