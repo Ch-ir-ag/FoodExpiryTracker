@@ -93,133 +93,142 @@ export default function Auth() {
         </button>
       </div>
 
-      {/* Waitlist Form */}
-      {activeTab === 'waitlist' && (
-        <WaitlistForm onSwitchToPilot={() => setActiveTab('pilotSignup')} />
-      )}
+      {/* Auth Form Container */}
+      <div className="w-full max-w-md mx-auto px-4 py-6 bg-white/90 backdrop-blur-md rounded-xl shadow-lg">
+        {/* Waitlist Form */}
+        {activeTab === 'waitlist' && (
+          <WaitlistForm onSwitchToPilot={() => setActiveTab('pilotSignup')} />
+        )}
 
-      {/* Pilot Sign Up Form */}
-      {activeTab === 'pilotSignup' && (
-        <div>
-          <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-            Pilot Sign Up
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Create an account to access our pilot program.
-          </p>
-          
-          <form onSubmit={handleAuth} className="space-y-6">
-            <div>
-              <label htmlFor="pilotCode" className="block text-base text-gray-700 mb-2">
-                Pilot Code
-              </label>
-              <input
-                id="pilotCode"
-                type="text"
-                value={pilotCode}
-                onChange={(e) => setPilotCode(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                placeholder="Enter your pilot code"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-base text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                required
-              />
-            </div>
+        {/* Pilot Sign Up Form */}
+        {activeTab === 'pilotSignup' && (
+          <div>
+            <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+              Pilot Sign Up
+            </h2>
+            <p className="text-gray-600 mb-8">
+              Create an account to access our pilot program.
+            </p>
             
-            <div>
-              <label htmlFor="password" className="block text-base text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                required
-              />
-            </div>
+            <form onSubmit={handleAuth} className="space-y-6">
+              <div>
+                <label htmlFor="pilotCode" className="block text-base text-gray-700 mb-2">
+                  Pilot Code
+                </label>
+                <input
+                  id="pilotCode"
+                  type="text"
+                  value={pilotCode}
+                  onChange={(e) => setPilotCode(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                  placeholder="Enter your pilot code"
+                  required
+                />
+              </div>
 
-            {error && (
-              <div className="text-red-500 text-sm py-2">{error}</div>
-            )}
+              <div>
+                <label htmlFor="email" className="block text-base text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="password" className="block text-base text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Processing...' : 'Sign Up'}
-            </button>
-          </form>
-        </div>
-      )}
+              {error && (
+                <div className="text-red-500 text-sm py-2">{error}</div>
+              )}
 
-      {/* Pilot Sign In Form */}
-      {activeTab === 'pilotSignin' && (
-        <div>
-          <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-            Pilot Sign In
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Sign in to access your pilot account.
-          </p>
-          
-          <form onSubmit={handleAuth} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-base text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                required
-              />
-            </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                ) : null}
+                Sign Up
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Pilot Sign In Form */}
+        {activeTab === 'pilotSignin' && (
+          <div>
+            <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+              Pilot Sign In
+            </h2>
+            <p className="text-gray-600 mb-8">
+              Sign in to access your pilot account.
+            </p>
             
-            <div>
-              <label htmlFor="password" className="block text-base text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                required
-              />
-            </div>
+            <form onSubmit={handleAuth} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-base text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="password" className="block text-base text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
+                  required
+                />
+              </div>
 
-            {error && (
-              <div className="text-red-500 text-sm py-2">{error}</div>
-            )}
+              {error && (
+                <div className="text-red-500 text-sm py-2">{error}</div>
+              )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Processing...' : 'Sign In'}
-            </button>
-          </form>
-        </div>
-      )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                ) : null}
+                Sign In
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

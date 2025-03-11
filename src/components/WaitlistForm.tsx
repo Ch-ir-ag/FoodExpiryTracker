@@ -8,9 +8,11 @@ interface Props {
   onSwitchToPilot: () => void;
 }
 
-export default function WaitlistForm({ onSwitchToPilot: _onSwitchToPilot }: Props) {
+export default function WaitlistForm({ onSwitchToPilot }: Props) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,36 +50,76 @@ export default function WaitlistForm({ onSwitchToPilot: _onSwitchToPilot }: Prop
   };
 
   return (
-    <div>
-      <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-        Join the Waitlist
+    <div className="w-full">
+      <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-2">
+        Join Our Waitlist
       </h2>
-      <p className="text-gray-600 mb-8">
-        Be the first to know when we launch and get early access to our food tracking platform.
+      <p className="text-gray-600 mb-6">
+        Be the first to know when we launch!
       </p>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="waitlist-email" className="block text-base text-gray-700 mb-2">
-            Email
-          </label>
-          <input
-            id="waitlist-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-            required
-          />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4 w-full">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Joining...' : 'Join Waitlist'}
-        </button>
+        
+        {error && (
+          <div className="text-red-500 text-sm">{error}</div>
+        )}
+        
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              'Join Waitlist'
+            )}
+          </button>
+        </div>
+        
+        <div className="text-center text-sm text-gray-500 mt-4">
+          <p>Already have a pilot code? {' '}
+            <button 
+              type="button"
+              onClick={onSwitchToPilot}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Sign up for pilot
+            </button>
+          </p>
+        </div>
       </form>
     </div>
   );

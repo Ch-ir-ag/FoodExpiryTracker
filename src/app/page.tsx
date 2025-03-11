@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 import { ArrowRight, Receipt, Upload, Sparkles } from 'lucide-react';
 import AIFeatureSection from '@/components/AIFeatureSection';
 import DataFlowAnimation from '@/components/DataFlowAnimation';
-import AIHeroAnimation from '@/components/AIHeroAnimation';
 import AILearningProcess from '@/components/AILearningProcess';
 import AIWasteReductionStats from '@/components/AIWasteReductionStats';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -55,11 +54,6 @@ export default function Home() {
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-blue-100 to-transparent -z-10" />
         <div className="absolute top-20 left-0 w-72 h-72 bg-blue-200 rounded-full filter blur-3xl opacity-20 -z-10" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-200 rounded-full filter blur-3xl opacity-20 -z-10" />
-        
-        {/* AI Animation */}
-        <ErrorBoundary>
-          <AIHeroAnimation />
-        </ErrorBoundary>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
@@ -200,7 +194,7 @@ export default function Home() {
             Get started with Fresity in three simple steps
           </p>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="relative">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">

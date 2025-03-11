@@ -1,94 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Receipt, Calendar, Brain } from 'lucide-react';
 
 /**
- * A component that displays an animated data flow visualization
+ * A component that displays a data flow visualization
  * to illustrate how the AI processes food data.
  */
 export default function DataFlowAnimation() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    // Prevent running in SSR
-    if (typeof window === 'undefined') return;
-    
-    const container = containerRef.current;
-    if (!container) return;
-    
-    // Create animated particles
-    const createParticles = () => {
-      try {
-        // Remove existing particles
-        const existingParticles = container.querySelectorAll('.data-particle');
-        existingParticles.forEach(p => p.remove());
-        
-        // Create new particles
-        for (let i = 0; i < 15; i++) {
-          const particleTimeout = setTimeout(() => {
-            if (!container) return;
-            
-            const particle = document.createElement('div');
-            particle.className = 'data-particle absolute w-2 h-2 rounded-full bg-blue-500 opacity-70';
-            
-            // Random starting position at the Receipt icon
-            const startX = 50; // Approximate x position of Receipt icon
-            const startY = 100; // Approximate y position of Receipt icon
-            
-            particle.style.left = `${startX + (Math.random() * 10 - 5)}px`;
-            particle.style.top = `${startY + (Math.random() * 10 - 5)}px`;
-            
-            container.appendChild(particle);
-            
-            // Animate to Brain
-            const brainTimeout = setTimeout(() => {
-              particle.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
-              particle.style.left = `${180 + (Math.random() * 10 - 5)}px`; // Brain x position
-              particle.style.top = `${100 + (Math.random() * 10 - 5)}px`; // Brain y position
-            }, 100);
-            
-            // Animate to Calendar
-            const calendarTimeout = setTimeout(() => {
-              particle.style.left = `${310 + (Math.random() * 10 - 5)}px`; // Calendar x position
-              particle.style.top = `${100 + (Math.random() * 10 - 5)}px`; // Calendar y position
-            }, 1600);
-            
-            // Fade out and remove
-            const fadeTimeout = setTimeout(() => {
-              particle.style.opacity = '0';
-              const removeTimeout = setTimeout(() => {
-                if (particle.parentNode === container) {
-                  particle.remove();
-                }
-              }, 500);
-              
-              return () => clearTimeout(removeTimeout);
-            }, 3000);
-            
-            return () => {
-              clearTimeout(brainTimeout);
-              clearTimeout(calendarTimeout);
-              clearTimeout(fadeTimeout);
-            };
-          }, i * 300); // Stagger particle creation
-          
-          return () => clearTimeout(particleTimeout);
-        }
-      } catch (error) {
-        console.error('Error creating particles:', error);
-      }
-    };
-    
-    // Start animation and repeat
-    createParticles();
-    const interval = setInterval(createParticles, 5000);
-    
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-  
   return (
-    <div className="relative w-full h-[200px] bg-white/50 rounded-xl p-4 overflow-hidden" ref={containerRef}>
+    <div className="relative w-full h-[200px] bg-white/50 rounded-xl p-4 overflow-hidden">
       {/* Flow diagram */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="flex items-center space-x-8 md:space-x-16">
@@ -128,13 +47,6 @@ export default function DataFlowAnimation() {
           </div>
         </div>
       </div>
-      
-      {/* Add CSS for particles */}
-      <style jsx>{`
-        .data-particle {
-          transition: opacity 0.5s ease-out;
-        }
-      `}</style>
     </div>
   );
 } 
