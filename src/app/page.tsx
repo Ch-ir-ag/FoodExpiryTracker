@@ -191,7 +191,7 @@ export default function Home() {
             How It Works
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Get started with Fresity in three simple steps
+            Get started with Expiroo in three simple steps
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

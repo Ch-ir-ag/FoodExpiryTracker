@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Food Expiry Tracker",
+  title: "Expiroo",
   description: "Track your food expiry dates and reduce waste",
 };
 
