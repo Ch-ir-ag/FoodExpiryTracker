@@ -41,8 +41,8 @@ export default function Auth() {
         });
         if (error) throw error;
         
-        // Add notification to check email for verification link
-        toast.success('Signup successful! Please check your email inbox for a verification link.');
+        // Add notification to check inbox for confirmation email
+        toast.success('Please check your inbox to confirm your email address');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
