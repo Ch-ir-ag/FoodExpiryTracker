@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import WaitlistForm from './WaitlistForm';
+import toast from 'react-hot-toast';
 
 type AuthTab = 'waitlist' | 'pilotSignup' | 'pilotSignin';
 
@@ -39,6 +40,9 @@ export default function Auth() {
           }
         });
         if (error) throw error;
+        
+        // Add notification to check email for verification link
+        toast.success('Signup successful! Please check your email inbox for a verification link.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,

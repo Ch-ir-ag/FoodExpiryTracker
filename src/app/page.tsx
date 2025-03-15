@@ -10,15 +10,32 @@ import DataFlowAnimation from '@/components/DataFlowAnimation';
 import AILearningProcess from '@/components/AILearningProcess';
 import AIWasteReductionStats from '@/components/AIWasteReductionStats';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 // Stats can be manually edited here
 const STATS = {
-  users: 350,  // Edit this number to update total users
+  users: 400,  // Edit this number to update total users
   pilots: 20    // Edit this number to update active pilots
 };
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Handle authentication errors from URL parameters
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const errorCode = searchParams.get('error_code');
+    
+    if (error === 'access_denied' && errorCode === 'otp_expired') {
+      toast.error('Verification link has expired. Please sign up again.');
+      // Clear error params from URL
+      router.replace('/');
+    }
+  }, [searchParams, router]);
 
   // Show a simple loading state while checking auth
   if (loading) {
