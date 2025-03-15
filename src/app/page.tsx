@@ -14,7 +14,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 // Stats can be manually edited here
 const STATS = {
   users: 400,  // Edit this number to update total users
-  pilots: 20    // Edit this number to update active pilots
+  foods: 1250  // Edit this number to update total foods tracked
 };
 
 export default function Home() {
@@ -75,15 +75,15 @@ export default function Home() {
                     {STATS.users.toLocaleString()}+
                   </div>
                   <div className="text-sm text-gray-600">
-                    Waitlist Users
+                    Active Users
                   </div>
                 </div>
                 <div className="text-center lg:text-left">
                   <div className="text-4xl font-bold text-blue-600 mb-2">
-                    {STATS.pilots.toLocaleString()}
+                    {STATS.foods.toLocaleString()}+
                   </div>
                   <div className="text-sm text-gray-600">
-                    Active Pilots
+                    Foods Tracked
                   </div>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Account</h3>
                 <p className="text-gray-600">
-                  Sign up for free and set up your personal food tracking dashboard
+                  Sign in with Google and access your personal food tracking dashboard
                 </p>
               </div>
               <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 z-10">

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import toast from 'react-hot-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      
+      // Show welcome message if user is logged in
+      if (session?.user && typeof window !== 'undefined') {
+        const storedUid = localStorage.getItem('lastSignInUid');
+        if (storedUid !== session.user.id) {
+          // Only show welcome message on first sign-in or when a different user signs in
+          toast.success('Welcome to Expiroo!');
+          localStorage.setItem('lastSignInUid', session.user.id);
+        }
+      }
+      
       setLoading(false);
     });
 

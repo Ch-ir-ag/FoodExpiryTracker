@@ -2,21 +2,13 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import WaitlistForm from './WaitlistForm';
 import toast from 'react-hot-toast';
-
-type AuthTab = 'waitlist' | 'pilotSignup' | 'pilotSignin';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [pilotCode, setPilotCode] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<AuthTab>('waitlist');
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
 
@@ -25,213 +17,81 @@ export default function Auth() {
         throw new Error('Unable to connect to authentication service');
       }
 
-      if (activeTab === 'pilotSignup') {
-        if (pilotCode !== 'PILOT') {
-          throw new Error('Invalid pilot code. Please try again.');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          redirectTo: window.location.origin,
         }
+      });
 
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              is_pilot: true
-            }
-          }
-        });
-        if (error) throw error;
-        
-        // Add notification to check inbox for confirmation email
-        toast.success('Please check your inbox to confirm your email address');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-      }
+      if (error) throw error;
+      
+      // User will be redirected to Google
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message);
       } else {
         setError('An unexpected error occurred');
       }
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="relative z-10">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-8">
-        <button
-          onClick={() => setActiveTab('waitlist')}
-          className={`py-3 px-6 font-medium text-sm ${
-            activeTab === 'waitlist'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Join Waitlist
-        </button>
-        <button
-          onClick={() => setActiveTab('pilotSignup')}
-          className={`py-3 px-6 font-medium text-sm ${
-            activeTab === 'pilotSignup'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Pilot Sign Up
-        </button>
-        <button
-          onClick={() => setActiveTab('pilotSignin')}
-          className={`py-3 px-6 font-medium text-sm ${
-            activeTab === 'pilotSignin'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Pilot Sign In
-        </button>
-      </div>
-
-      {/* Auth Form Container */}
       <div className="w-full max-w-md mx-auto px-4 py-6 bg-white/90 backdrop-blur-md rounded-xl shadow-lg">
-        {/* Waitlist Form */}
-        {activeTab === 'waitlist' && (
-          <WaitlistForm onSwitchToPilot={() => setActiveTab('pilotSignup')} />
-        )}
+        <div>
+          <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+            Sign In to Expiroo
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Access your food tracking dashboard instantly with Google.
+          </p>
+          
+          <div className="space-y-6">
+            {error && (
+              <div className="text-red-500 text-sm py-2">{error}</div>
+            )}
 
-        {/* Pilot Sign Up Form */}
-        {activeTab === 'pilotSignup' && (
-          <div>
-            <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-              Pilot Sign Up
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Create an account to access our pilot program.
-            </p>
-            
-            <form onSubmit={handleAuth} className="space-y-6">
-              <div>
-                <label htmlFor="pilotCode" className="block text-base text-gray-700 mb-2">
-                  Pilot Code
-                </label>
-                <input
-                  id="pilotCode"
-                  type="text"
-                  value={pilotCode}
-                  onChange={(e) => setPilotCode(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                  placeholder="Enter your pilot code"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-base text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="password" className="block text-base text-gray-700 mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="text-red-500 text-sm py-2">{error}</div>
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="w-full px-4 py-3 bg-white hover:bg-gray-50 text-gray-800 font-medium rounded-lg transition-colors duration-200 flex items-center justify-center border border-gray-300"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+              ) : (
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
               )}
+              Sign in with Google
+            </button>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                ) : null}
-                Sign Up
-              </button>
-            </form>
+            <div className="text-center text-sm text-gray-500 mt-4">
+              By signing in, you agree to our Terms of Service and Privacy Policy.
+            </div>
           </div>
-        )}
-
-        {/* Pilot Sign In Form */}
-        {activeTab === 'pilotSignin' && (
-          <div>
-            <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-              Pilot Sign In
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Sign in to access your pilot account.
-            </p>
-            
-            <form onSubmit={handleAuth} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-base text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="password" className="block text-base text-gray-700 mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-gray-700"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="text-red-500 text-sm py-2">{error}</div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                ) : null}
-                Sign In
-              </button>
-            </form>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
