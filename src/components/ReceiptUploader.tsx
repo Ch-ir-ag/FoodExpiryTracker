@@ -12,6 +12,7 @@ export default function ReceiptUploader() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [useAI, setUseAI] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getExpiryText = (expiryDate: string) => {
@@ -33,8 +34,13 @@ export default function ReceiptUploader() {
       setIsProcessing(true);
       setSaveError(null);
       
-      // Process the receipt
-      const processedReceipt = await ReceiptProcessor.processImage(file);
+      // Show toast based on which method is being used
+      if (useAI) {
+        toast.loading('Using AI to identify items and predict expiry dates...', { duration: 3000 });
+      }
+      
+      // Process the receipt with or without AI
+      const processedReceipt = await ReceiptProcessor.processImage(file, useAI);
       
       // Save to Supabase
       try {
@@ -67,7 +73,23 @@ export default function ReceiptUploader() {
 
   return (
     <div className="w-full">
-      <div className="flex justify-center">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Upload Receipt</h2>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700 cursor-pointer flex items-center">
+              <input
+                type="checkbox"
+                checked={useAI}
+                onChange={(e) => setUseAI(e.target.checked)}
+                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              Use AI Classification
+              <span className="ml-1 text-xs text-blue-600">(Beta)</span>
+            </label>
+          </div>
+        </div>
+        
         <div 
           className="w-full bg-white rounded-xl shadow-sm border border-blue-100 p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
           onClick={() => fileInputRef.current?.click()}
@@ -88,12 +110,19 @@ export default function ReceiptUploader() {
             Select a file from your device
           </span>
         </div>
+        
+        {useAI && !isProcessing && (
+          <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
+            <p className="font-medium text-blue-700 mb-1">About AI Classification</p>
+            <p>Using AI will provide more accurate food categorization and expiry predictions, but processing will take longer.</p>
+          </div>
+        )}
       </div>
 
       {receipt && (
         <div className="mt-8 bg-white rounded-xl shadow-lg p-4 sm:p-6 transition-all">
           <h2 className="text-xl font-bold mb-4 text-gray-900 border-b pb-2">
-            Processed Receipt
+            Processed Receipt {useAI && <span className="text-sm text-blue-600">(AI Enhanced)</span>}
           </h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -122,7 +151,14 @@ export default function ReceiptUploader() {
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <div>
                         <p className="font-medium text-gray-900 text-sm">{item.name}</p>
-                        <p className="text-gray-700 text-xs">€{item.price.toFixed(2)}</p>
+                        <div className="flex items-center">
+                          <p className="text-gray-700 text-xs">€{item.price.toFixed(2)}</p>
+                          {item.category && (
+                            <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${

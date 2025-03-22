@@ -158,6 +158,23 @@ export default function Home() {
               </p>
             </div>
           </div>
+
+          {/* New AI Feature Notice */}
+          <div className="mt-12 bg-blue-50 border border-blue-100 rounded-xl p-6 flex flex-col md:flex-row items-center shadow-sm">
+            <div className="bg-blue-100 rounded-full p-3 md:mr-6 mb-4 md:mb-0">
+              <Sparkles className="w-8 h-8 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-blue-900 mb-2 flex items-center">
+                New: AI-Powered Food Classification
+                <span className="ml-2 text-xs font-medium text-white bg-blue-500 px-2 py-1 rounded-full">Beta</span>
+              </h3>
+              <p className="text-blue-700">
+                We've added zero-shot classification that more accurately identifies food items and predicts their shelf life.
+                Try it out when uploading your next receipt by toggling the "Use AI Classification" option!
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

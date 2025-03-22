@@ -4,7 +4,7 @@ import { formatDateForDB } from '@/utils/dateUtils';
 import { ShelfLifeService } from './shelfLifeService';
 
 export class ReceiptProcessor {
-  static async processImage(imageFile: File): Promise<Receipt> {
+  static async processImage(imageFile: File, useAI: boolean = false): Promise<Receipt> {
     try {
       const result = await Tesseract.recognize(
         imageFile,
@@ -13,14 +13,14 @@ export class ReceiptProcessor {
       );
 
       const text = result.data.text;
-      return this.parseReceiptText(text);
+      return this.parseReceiptText(text, useAI);
     } catch (error) {
       console.error('Error processing receipt:', error);
       throw error;
     }
   }
 
-  static async parseReceiptText(text: string): Promise<Receipt> {
+  static async parseReceiptText(text: string, useAI: boolean = false): Promise<Receipt> {
     try {
       // Extract store information
       const storeMatch = text.match(/Dublin - ([^\n]+)/) || text.match(/LIDL/);
@@ -28,7 +28,7 @@ export class ReceiptProcessor {
 
       // Extract date
       const dateMatch = text.match(/Date:\s*(\d{2}\/\d{2}\/\d{2})/) || text.match(/(\d{2})\/(\d{2})\/(\d{2})/);
-      const date = dateMatch ? dateMatch[1] || dateMatch[2] : '';
+      const date = dateMatch ? dateMatch[1] || dateMatch[0] : '';
       if (!date) {
         throw new Error('Could not extract date from receipt');
       }
@@ -57,20 +57,9 @@ export class ReceiptProcessor {
             continue;
           }
           
-          // Get category and expiry date using the new async methods
-          const category = await ShelfLifeService.categorizeProduct(name);
-          const estimatedExpiryDate = await ShelfLifeService.calculateExpiryDate(name, formattedDate);
-          
-          items.push({
-            id: crypto.randomUUID(),
-            name: name.trim(),
-            price: parsedPrice,
-            quantity: 1,
-            purchaseDate: date,
-            estimatedExpiryDate: estimatedExpiryDate,
-            vatRate: null as number | null,
-            category: category
-          });
+          // Process item with or without AI-based classification
+          const item = this.processItem(name, parsedPrice, date, formattedDate, useAI);
+          items.push(item);
         }
       }
 
@@ -101,6 +90,57 @@ export class ReceiptProcessor {
     } catch (error) {
       console.error('Error parsing receipt:', error);
       throw error;
+    }
+  }
+  
+  /**
+   * Process a single item with optional AI-powered classification
+   */
+  private static processItem(
+    name: string, 
+    price: number, 
+    date: string, 
+    formattedDate: string,
+    useAI: boolean = false
+  ): ReceiptItem {
+    try {
+      // Get category and expiry date using either AI or simple classification
+      let category, estimatedExpiryDate;
+      
+      if (useAI) {
+        category = ShelfLifeService.categorizeProductWithAI(name);
+        estimatedExpiryDate = ShelfLifeService.calculateExpiryDateWithAI(name, formattedDate);
+      } else {
+        category = ShelfLifeService.categorizeProduct(name);
+        estimatedExpiryDate = ShelfLifeService.calculateExpiryDate(name, formattedDate);
+      }
+      
+      return {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        price: price,
+        quantity: 1,
+        purchaseDate: date,
+        estimatedExpiryDate: estimatedExpiryDate,
+        vatRate: null as number | null,
+        category: category
+      };
+    } catch (error) {
+      console.error(`Error processing item: ${name}`, error);
+      // Fall back to simple classification if anything fails
+      const category = ShelfLifeService.categorizeProduct(name);
+      const estimatedExpiryDate = ShelfLifeService.calculateExpiryDate(name, formattedDate);
+      
+      return {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        price: price,
+        quantity: 1,
+        purchaseDate: date,
+        estimatedExpiryDate: estimatedExpiryDate,
+        vatRate: null as number | null,
+        category: category
+      };
     }
   }
 } 

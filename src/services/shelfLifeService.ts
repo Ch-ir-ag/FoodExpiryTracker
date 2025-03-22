@@ -1,458 +1,282 @@
 import { ShelfLife } from '@/types';
-import { FoodDatabaseService } from './foodDatabaseService';
 import { addDays, format } from 'date-fns';
-import { supabase } from '@/lib/supabase';
-import { LlmExpiryService } from './llmExpiryService';
+import { ZeroShotClassificationService } from './ZeroShotClassificationService';
 
-// Comprehensive database of food categories and shelf lives
+// Simplified database of food categories and shelf lives
 const SHELF_LIFE_DATABASE: ShelfLife[] = [
   // Dairy Products
   { category: 'milk', daysToExpiry: 7, storageType: 'refrigerated' },
   { category: 'yogurt', daysToExpiry: 14, storageType: 'refrigerated' },
-  { category: 'cheese-soft', daysToExpiry: 14, storageType: 'refrigerated' },
-  { category: 'cheese-hard', daysToExpiry: 30, storageType: 'refrigerated' },
+  { category: 'cheese', daysToExpiry: 14, storageType: 'refrigerated' },
   { category: 'butter', daysToExpiry: 30, storageType: 'refrigerated' },
   { category: 'cream', daysToExpiry: 7, storageType: 'refrigerated' },
   
   // Meat & Seafood
-  { category: 'beef-fresh', daysToExpiry: 3, storageType: 'refrigerated' },
-  { category: 'chicken-fresh', daysToExpiry: 2, storageType: 'refrigerated' },
-  { category: 'fish-fresh', daysToExpiry: 1, storageType: 'refrigerated' },
-  { category: 'pork-fresh', daysToExpiry: 3, storageType: 'refrigerated' },
-  { category: 'meat-ground', daysToExpiry: 2, storageType: 'refrigerated' },
-  { category: 'meat-processed', daysToExpiry: 7, storageType: 'refrigerated' },
-  { category: 'meat-frozen', daysToExpiry: 180, storageType: 'frozen' },
-  { category: 'seafood-frozen', daysToExpiry: 90, storageType: 'frozen' },
+  { category: 'beef', daysToExpiry: 3, storageType: 'refrigerated' },
+  { category: 'chicken', daysToExpiry: 2, storageType: 'refrigerated' },
+  { category: 'fish', daysToExpiry: 1, storageType: 'refrigerated' },
+  { category: 'pork', daysToExpiry: 3, storageType: 'refrigerated' },
+  { category: 'meat', daysToExpiry: 3, storageType: 'refrigerated' },
+  { category: 'seafood', daysToExpiry: 2, storageType: 'refrigerated' },
+  { category: 'sausage', daysToExpiry: 5, storageType: 'refrigerated' },
+  { category: 'bacon', daysToExpiry: 7, storageType: 'refrigerated' },
+  { category: 'ham', daysToExpiry: 5, storageType: 'refrigerated' },
   
-  // Fruits
-  { category: 'apples', daysToExpiry: 30, storageType: 'refrigerated' },
-  { category: 'bananas', daysToExpiry: 5, storageType: 'room-temperature' },
+  // Fruits & Vegetables
+  { category: 'fruit', daysToExpiry: 7, storageType: 'refrigerated' },
+  { category: 'apple', daysToExpiry: 14, storageType: 'refrigerated' },
+  { category: 'banana', daysToExpiry: 5, storageType: 'room-temperature' },
+  { category: 'orange', daysToExpiry: 14, storageType: 'refrigerated' },
   { category: 'berries', daysToExpiry: 5, storageType: 'refrigerated' },
-  { category: 'citrus', daysToExpiry: 14, storageType: 'refrigerated' },
-  { category: 'grapes', daysToExpiry: 7, storageType: 'refrigerated' },
-  { category: 'melons', daysToExpiry: 7, storageType: 'refrigerated' },
-  { category: 'stone-fruit', daysToExpiry: 5, storageType: 'refrigerated' },
-  
-  // Vegetables
-  { category: 'leafy-greens', daysToExpiry: 5, storageType: 'refrigerated' },
-  { category: 'root-vegetables', daysToExpiry: 14, storageType: 'refrigerated' },
-  { category: 'potatoes', daysToExpiry: 21, storageType: 'room-temperature' },
-  { category: 'onions', daysToExpiry: 30, storageType: 'room-temperature' },
-  { category: 'tomatoes', daysToExpiry: 7, storageType: 'room-temperature' },
-  { category: 'cucumbers', daysToExpiry: 7, storageType: 'refrigerated' },
-  { category: 'peppers', daysToExpiry: 10, storageType: 'refrigerated' },
-  { category: 'broccoli', daysToExpiry: 7, storageType: 'refrigerated' },
-  { category: 'mushrooms', daysToExpiry: 7, storageType: 'refrigerated' },
+  { category: 'vegetable', daysToExpiry: 7, storageType: 'refrigerated' },
+  { category: 'lettuce', daysToExpiry: 5, storageType: 'refrigerated' },
+  { category: 'tomato', daysToExpiry: 7, storageType: 'room-temperature' },
+  { category: 'cucumber', daysToExpiry: 7, storageType: 'refrigerated' },
+  { category: 'pepper', daysToExpiry: 10, storageType: 'refrigerated' },
+  { category: 'carrot', daysToExpiry: 14, storageType: 'refrigerated' },
+  { category: 'potato', daysToExpiry: 14, storageType: 'room-temperature' },
+  { category: 'onion', daysToExpiry: 30, storageType: 'room-temperature' },
   
   // Bakery
-  { category: 'bread-fresh', daysToExpiry: 5, storageType: 'room-temperature' },
-  { category: 'bread-packaged', daysToExpiry: 7, storageType: 'room-temperature' },
-  { category: 'pastries', daysToExpiry: 3, storageType: 'room-temperature' },
-  { category: 'cake', daysToExpiry: 4, storageType: 'refrigerated' },
+  { category: 'bread', daysToExpiry: 5, storageType: 'room-temperature' },
+  { category: 'roll', daysToExpiry: 3, storageType: 'room-temperature' },
+  { category: 'pastry', daysToExpiry: 3, storageType: 'room-temperature' },
+  { category: 'cake', daysToExpiry: 5, storageType: 'refrigerated' },
+  { category: 'cookies', daysToExpiry: 14, storageType: 'room-temperature' },
   
   // Pantry Items
-  { category: 'eggs', daysToExpiry: 28, storageType: 'refrigerated' },
-  { category: 'pasta-dry', daysToExpiry: 730, storageType: 'room-temperature' },
-  { category: 'rice', daysToExpiry: 730, storageType: 'room-temperature' },
+  { category: 'pasta', daysToExpiry: 365, storageType: 'room-temperature' },
+  { category: 'rice', daysToExpiry: 365, storageType: 'room-temperature' },
   { category: 'cereal', daysToExpiry: 180, storageType: 'room-temperature' },
-  { category: 'flour', daysToExpiry: 180, storageType: 'room-temperature' },
-  { category: 'sugar', daysToExpiry: 720, storageType: 'room-temperature' },
-  { category: 'canned-goods', daysToExpiry: 730, storageType: 'room-temperature' },
-  { category: 'snacks', daysToExpiry: 90, storageType: 'room-temperature' },
+  { category: 'canned', daysToExpiry: 365, storageType: 'room-temperature' },
+  { category: 'snack', daysToExpiry: 90, storageType: 'room-temperature' },
+  { category: 'chocolate', daysToExpiry: 180, storageType: 'room-temperature' },
   { category: 'nuts', daysToExpiry: 90, storageType: 'room-temperature' },
+  { category: 'flour', daysToExpiry: 180, storageType: 'room-temperature' },
+  { category: 'sugar', daysToExpiry: 365, storageType: 'room-temperature' },
+  { category: 'oil', daysToExpiry: 180, storageType: 'room-temperature' },
+  
+  // Eggs
+  { category: 'eggs', daysToExpiry: 28, storageType: 'refrigerated' },
   
   // Beverages
-  { category: 'juice-fresh', daysToExpiry: 7, storageType: 'refrigerated' },
-  { category: 'juice-packaged', daysToExpiry: 21, storageType: 'refrigerated' },
-  { category: 'soda', daysToExpiry: 270, storageType: 'room-temperature' },
-  { category: 'water-bottled', daysToExpiry: 365, storageType: 'room-temperature' },
+  { category: 'juice', daysToExpiry: 7, storageType: 'refrigerated' },
+  { category: 'soda', daysToExpiry: 180, storageType: 'room-temperature' },
+  { category: 'water', daysToExpiry: 365, storageType: 'room-temperature' },
+  { category: 'beer', daysToExpiry: 180, storageType: 'refrigerated' },
+  { category: 'wine', daysToExpiry: 365, storageType: 'room-temperature' },
   
-  // Condiments
-  { category: 'ketchup', daysToExpiry: 180, storageType: 'refrigerated' },
-  { category: 'mustard', daysToExpiry: 180, storageType: 'refrigerated' },
-  { category: 'mayonnaise', daysToExpiry: 60, storageType: 'refrigerated' },
-  { category: 'salad-dressing', daysToExpiry: 90, storageType: 'refrigerated' },
-  { category: 'jam', daysToExpiry: 180, storageType: 'refrigerated' },
-  { category: 'honey', daysToExpiry: 730, storageType: 'room-temperature' },
+  // Deli Items
+  { category: 'deli', daysToExpiry: 5, storageType: 'refrigerated' },
   
   // Default
-  { category: 'default', daysToExpiry: 7, storageType: 'refrigerated' },
-
-  // Specific LIDL products
-  { category: 'greek-yogurt', daysToExpiry: 21, storageType: 'refrigerated' },
-  { category: 'white-rolls', daysToExpiry: 5, storageType: 'room-temperature' },
-  { category: 'tortilla-wraps', daysToExpiry: 7, storageType: 'room-temperature' },
-  { category: 'hazelnuts', daysToExpiry: 180, storageType: 'room-temperature' },
-  { category: 'chocolate', daysToExpiry: 180, storageType: 'room-temperature' },
-
-  // Add more LIDL-specific items
-  { category: 'lidl-bakery', daysToExpiry: 3, storageType: 'room-temperature' },
-  { category: 'lidl-deli', daysToExpiry: 4, storageType: 'refrigerated' },
-  { category: 'lidl-fresh-meat', daysToExpiry: 3, storageType: 'refrigerated' },
-  { category: 'lidl-fresh-fish', daysToExpiry: 1, storageType: 'refrigerated' },
-  { category: 'lidl-dairy', daysToExpiry: 10, storageType: 'refrigerated' },
+  { category: 'default', daysToExpiry: 7, storageType: 'refrigerated' }
 ];
-
-// Product name keywords mapping to categories - kept for reference but not actively used
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const _PRODUCT_KEYWORDS: Record<string, string[]> = {
-  'milk': ['milk', 'dairy milk', 'whole milk', 'semi skimmed', 'skimmed', 'almond milk', 'soy milk', 'oat milk'],
-  'yogurt': ['yogurt', 'yoghurt', 'greek yogurt', 'yogurt drink', 'activia', 'yoplait', 'muller'],
-  'cheese-soft': ['cream cheese', 'cottage cheese', 'ricotta', 'brie', 'camembert', 'mozzarella', 'feta'],
-  'cheese-hard': ['cheddar', 'parmesan', 'gouda', 'edam', 'emmental', 'gruyere', 'cheese block'],
-  'butter': ['butter', 'margarine', 'spread', 'flora', 'lurpak'],
-  'cream': ['cream', 'double cream', 'single cream', 'whipping cream', 'sour cream', 'crème fraîche'],
-  
-  'beef-fresh': ['beef', 'steak', 'roast beef', 'sirloin', 'ribeye', 'mince beef'],
-  'chicken-fresh': ['chicken', 'chicken breast', 'chicken thigh', 'chicken wings', 'chicken drumsticks'],
-  'fish-fresh': ['fish', 'salmon', 'cod', 'haddock', 'tuna steak', 'trout', 'sea bass', 'fresh fish'],
-  'pork-fresh': ['pork', 'pork chop', 'pork loin', 'pork belly', 'gammon'],
-  'meat-ground': ['mince', 'ground', 'minced beef', 'ground turkey', 'ground chicken'],
-  'meat-processed': ['ham', 'bacon', 'sausage', 'salami', 'pepperoni', 'chorizo', 'deli meat'],
-  'meat-frozen': ['frozen meat', 'frozen chicken', 'frozen beef', 'frozen turkey'],
-  'seafood-frozen': ['frozen fish', 'fish fingers', 'frozen prawns', 'frozen shrimp', 'frozen seafood'],
-  
-  'apples': ['apple', 'granny smith', 'pink lady', 'gala apple', 'golden delicious'],
-  'bananas': ['banana', 'bananas'],
-  'berries': ['berry', 'berries', 'strawberry', 'strawberries', 'blueberry', 'blueberries', 'raspberry', 'blackberry'],
-  'citrus': ['orange', 'lemon', 'lime', 'grapefruit', 'mandarin', 'clementine', 'satsuma'],
-  'grapes': ['grape', 'grapes', 'red grapes', 'green grapes'],
-  'melons': ['melon', 'watermelon', 'cantaloupe', 'honeydew'],
-  'stone-fruit': ['peach', 'nectarine', 'plum', 'apricot', 'cherry', 'cherries'],
-  
-  'leafy-greens': ['lettuce', 'spinach', 'kale', 'rocket', 'arugula', 'chard', 'cabbage', 'greens'],
-  'root-vegetables': ['carrot', 'parsnip', 'turnip', 'beetroot', 'swede', 'radish'],
-  'potatoes': ['potato', 'potatoes', 'sweet potato', 'maris piper'],
-  'onions': ['onion', 'onions', 'red onion', 'white onion', 'shallot', 'spring onion', 'scallion'],
-  'tomatoes': ['tomato', 'tomatoes', 'cherry tomato', 'plum tomato', 'beef tomato'],
-  'cucumbers': ['cucumber'],
-  'peppers': ['pepper', 'bell pepper', 'red pepper', 'green pepper', 'yellow pepper', 'capsicum'],
-  'broccoli': ['broccoli', 'tenderstem', 'broccolini'],
-  'mushrooms': ['mushroom', 'mushrooms', 'button mushroom', 'portobello', 'shiitake'],
-  
-  'bread-fresh': ['fresh bread', 'bakery bread', 'baguette', 'sourdough', 'artisan bread', 'loaf'],
-  'bread-packaged': ['bread', 'sliced bread', 'white bread', 'brown bread', 'wholemeal', 'whole grain'],
-  'pastries': ['pastry', 'croissant', 'danish', 'pain au chocolat', 'muffin', 'scone'],
-  'cake': ['cake', 'cheesecake', 'gateau', 'sponge cake'],
-  
-  'eggs': ['egg', 'eggs', 'free range', 'large eggs', 'medium eggs'],
-  'pasta-dry': ['pasta', 'spaghetti', 'penne', 'fusilli', 'linguine', 'macaroni', 'noodles'],
-  'rice': ['rice', 'basmati', 'jasmine rice', 'long grain', 'short grain', 'risotto rice'],
-  'cereal': ['cereal', 'cornflakes', 'muesli', 'granola', 'porridge', 'oats'],
-  'flour': ['flour', 'plain flour', 'self-raising', 'bread flour', 'wholemeal flour'],
-  'sugar': ['sugar', 'caster sugar', 'granulated', 'icing sugar', 'brown sugar'],
-  'canned-goods': ['can', 'tin', 'canned', 'tinned', 'baked beans', 'soup', 'tuna can', 'canned tomato'],
-  'snacks': ['crisps', 'chips', 'crackers', 'popcorn', 'pretzel', 'tortilla chips'],
-  'nuts': ['nuts', 'peanuts', 'cashews', 'almonds', 'walnuts', 'pistachios'],
-  
-  'juice-fresh': ['fresh juice', 'freshly squeezed', 'not from concentrate'],
-  'juice-packaged': ['juice', 'orange juice', 'apple juice', 'fruit juice', 'cranberry juice'],
-  'soda': ['soda', 'soft drink', 'cola', 'lemonade', 'fizzy drink', 'coke', 'pepsi'],
-  'water-bottled': ['water', 'mineral water', 'spring water', 'bottled water'],
-  
-  'ketchup': ['ketchup', 'tomato sauce', 'tomato ketchup'],
-  'mustard': ['mustard', 'dijon', 'english mustard', 'wholegrain mustard'],
-  'mayonnaise': ['mayo', 'mayonnaise', 'hellmann'],
-  'salad-dressing': ['dressing', 'salad dressing', 'vinaigrette', 'ranch dressing'],
-  'jam': ['jam', 'preserve', 'marmalade', 'conserve', 'strawberry jam'],
-  'honey': ['honey'],
-  'greek-yogurt': ['greek style yogurt', 'greek yogurt', 'greek yoghurt', 'greek style'],
-  'white-rolls': ['white sub rolls', 'white rolls', 'bread rolls', 'sub rolls', 'sandwich rolls'],
-  'tortilla-wraps': ['tortilla wraps', 'plain tortilla', 'wraps', 'tortillas', 'flour tortilla'],
-  'hazelnuts': ['hazelnuts', 'roasted hazelnuts', 'hazelnut', 'nuts'],
-  'chocolate': ['chocolate', 'milk chocolate', 'hazelnut milk chocolate', 'whole hazelnut', 'chocolate bar'],
-  'lidl-bakery': ['lidl bakery', 'fresh bakery', 'in-store bakery'],
-  'lidl-deli': ['lidl deli', 'deli counter', 'delicatessen'],
-  'lidl-fresh-meat': ['lidl fresh meat', 'meat counter', 'butcher counter'],
-  'lidl-fresh-fish': ['lidl fresh fish', 'fish counter', 'seafood counter'],
-  'lidl-dairy': ['lidl dairy', 'dairy section'],
-};
-/* eslint-enable @typescript-eslint/no-unused-vars */
-
-// Brand-specific category mapping - kept for reference but not actively used
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const _BRAND_CATEGORY_MAPPING: Record<string, string> = {
-  'lurpak': 'butter',
-  'flora': 'butter',
-  'muller': 'yogurt',
-  'activia': 'yogurt',
-  'yoplait': 'yogurt',
-  'heinz': 'canned-goods', // Default, will be overridden by product name
-  'hellmann': 'mayonnaise',
-  'coca-cola': 'soda',
-  'pepsi': 'soda',
-  'evian': 'water-bottled',
-  'warburtons': 'bread-packaged',
-  'hovis': 'bread-packaged',
-  'kelloggs': 'cereal',
-  'quaker': 'cereal',
-  'innocent': 'juice-packaged',
-  'tropicana': 'juice-packaged',
-  'walkers': 'snacks',
-  'pringles': 'snacks',
-  'cadbury': 'snacks',
-  'nestle': 'snacks',
-  'dolmio': 'pasta-dry',
-  'uncle ben': 'rice',
-  'lidl': 'default', // Will be overridden by more specific product matches
-};
-
-// Regional adjustments - kept for reference but not actively used
-const _REGIONAL_ADJUSTMENTS: Record<string, number> = {
-  'milk': 1, // Add 1 day to milk shelf life in Ireland (example)
-  'bread-fresh': -1, // Reduce by 1 day due to humidity (example)
-};
-/* eslint-enable @typescript-eslint/no-unused-vars */
 
 export class ShelfLifeService {
   /**
-   * Determine the most likely food category based on product name
-   * This is now a wrapper around the more sophisticated FoodDatabaseService
+   * Simplified method to categorize a product based on its name
    */
-  static async categorizeProduct(productName: string): Promise<string> {
-    try {
-      // Try to find a match in the dynamic database
-      const match = await FoodDatabaseService.findBestMatch(productName);
-      
-      if (match && match.confidence > 0.5) {
-        return match.product.category;
-      }
-      
-      // Fallback to the original categorization logic
-      return this.legacyCategorizeProduct(productName);
-    } catch (error) {
-      console.error('Error in categorizeProduct:', error);
-      return this.legacyCategorizeProduct(productName);
-    }
-  }
-  
-  /**
-   * Legacy categorization method (simplified version of the original)
-   */
-  private static legacyCategorizeProduct(productName: string): string {
-    const normalized = productName.toLowerCase().trim();
+  static categorizeProduct(productName: string): string {
+    const normalizedName = productName.toLowerCase().trim();
     
-    // Simple keyword matching
-    if (normalized.includes('milk')) return 'milk';
-    if (normalized.includes('yogurt') || normalized.includes('yoghurt')) return 'yogurt';
-    if (normalized.includes('cheese')) {
-      if (normalized.includes('cream') || normalized.includes('soft')) return 'cheese-soft';
-      return 'cheese-hard';
-    }
-    if (normalized.includes('butter')) return 'butter';
-    if (normalized.includes('cream')) return 'cream';
+    // Dairy Products
+    if (normalizedName.includes('milk') || normalizedName.includes('dairy milk')) return 'milk';
+    if (normalizedName.includes('yogurt') || normalizedName.includes('yoghurt') || 
+        normalizedName.includes('greek') || normalizedName.includes('activia') || 
+        normalizedName.includes('muller')) return 'yogurt';
+    if (normalizedName.includes('cheese') || normalizedName.includes('cheddar') || 
+        normalizedName.includes('brie') || normalizedName.includes('mozzarella') || 
+        normalizedName.includes('parmesan') || normalizedName.includes('feta')) return 'cheese';
+    if (normalizedName.includes('butter') || normalizedName.includes('lurpak') || 
+        normalizedName.includes('margarine') || normalizedName.includes('spread')) return 'butter';
+    if (normalizedName.includes('cream') || normalizedName.includes('crème fraîche')) return 'cream';
     
-    // LIDL specific products
-    if (normalized.includes('greek style yogurt')) return 'yogurt';
-    if (normalized.includes('white sub rolls')) return 'bread-packaged';
-    if (normalized.includes('tortilla wraps')) return 'tortilla-wraps';
+    // Meat & Seafood
+    if (normalizedName.includes('beef') || normalizedName.includes('steak') || 
+        normalizedName.includes('mince beef') || normalizedName.includes('ground beef')) return 'beef';
+    if (normalizedName.includes('chicken') || normalizedName.includes('poultry') || 
+        normalizedName.includes('drumstick') || normalizedName.includes('wing')) return 'chicken';
+    if (normalizedName.includes('fish') || normalizedName.includes('salmon') || 
+        normalizedName.includes('cod') || normalizedName.includes('tuna') || 
+        normalizedName.includes('haddock')) return 'fish';
+    if (normalizedName.includes('pork') || normalizedName.includes('loin') || 
+        normalizedName.includes('chop')) return 'pork';
+    if (normalizedName.includes('sausage') || normalizedName.includes('bratwurst') || 
+        normalizedName.includes('wurst')) return 'sausage';
+    if (normalizedName.includes('bacon')) return 'bacon';
+    if (normalizedName.includes('ham')) return 'ham';
+    if (normalizedName.includes('meat')) return 'meat';
+    if (normalizedName.includes('seafood') || normalizedName.includes('prawn') || 
+        normalizedName.includes('shrimp') || normalizedName.includes('crab') || 
+        normalizedName.includes('lobster')) return 'seafood';
+    
+    // Fruits
+    if (normalizedName.includes('apple')) return 'apple';
+    if (normalizedName.includes('banana')) return 'banana';
+    if (normalizedName.includes('orange') || normalizedName.includes('mandarin') || 
+        normalizedName.includes('clementine')) return 'orange';
+    if (normalizedName.includes('berry') || normalizedName.includes('berries') || 
+        normalizedName.includes('strawberry') || normalizedName.includes('blueberry') || 
+        normalizedName.includes('raspberry')) return 'berries';
+    if (normalizedName.includes('fruit') || normalizedName.includes('melon') || 
+        normalizedName.includes('watermelon') || normalizedName.includes('kiwi') || 
+        normalizedName.includes('pear') || normalizedName.includes('grape') || 
+        normalizedName.includes('peach') || normalizedName.includes('plum') || 
+        normalizedName.includes('nectarine')) return 'fruit';
+    
+    // Vegetables
+    if (normalizedName.includes('lettuce') || normalizedName.includes('iceberg') || 
+        normalizedName.includes('romaine')) return 'lettuce';
+    if (normalizedName.includes('tomato')) return 'tomato';
+    if (normalizedName.includes('cucumber')) return 'cucumber';
+    if (normalizedName.includes('pepper') || normalizedName.includes('capsicum') || 
+        normalizedName.includes('bell pepper')) return 'pepper';
+    if (normalizedName.includes('carrot')) return 'carrot';
+    if (normalizedName.includes('potato') || normalizedName.includes('potatoes')) return 'potato';
+    if (normalizedName.includes('onion')) return 'onion';
+    if (normalizedName.includes('salad') || normalizedName.includes('spinach') || 
+        normalizedName.includes('kale') || normalizedName.includes('broccoli') || 
+        normalizedName.includes('cauliflower') || normalizedName.includes('cabbage') || 
+        normalizedName.includes('vegetable') || normalizedName.includes('courgette') || 
+        normalizedName.includes('zucchini') || normalizedName.includes('aubergine') || 
+        normalizedName.includes('eggplant')) return 'vegetable';
+    
+    // Bakery
+    if (normalizedName.includes('bread') || normalizedName.includes('loaf') || 
+        normalizedName.includes('baguette') || normalizedName.includes('sourdough')) return 'bread';
+    if (normalizedName.includes('roll') || normalizedName.includes('bun')) return 'roll';
+    if (normalizedName.includes('cake') || normalizedName.includes('gateau') || 
+        normalizedName.includes('cheesecake')) return 'cake';
+    if (normalizedName.includes('cookie') || normalizedName.includes('biscuit')) return 'cookies';
+    if (normalizedName.includes('pastry') || normalizedName.includes('croissant') || 
+        normalizedName.includes('danish') || normalizedName.includes('muffin') || 
+        normalizedName.includes('scone')) return 'pastry';
+    
+    // Pantry Items
+    if (normalizedName.includes('pasta') || normalizedName.includes('spaghetti') || 
+        normalizedName.includes('penne') || normalizedName.includes('fusilli') || 
+        normalizedName.includes('macaroni') || normalizedName.includes('noodle')) return 'pasta';
+    if (normalizedName.includes('rice') || normalizedName.includes('basmati') || 
+        normalizedName.includes('jasmine')) return 'rice';
+    if (normalizedName.includes('cereal') || normalizedName.includes('oat') || 
+        normalizedName.includes('muesli') || normalizedName.includes('cornflakes')) return 'cereal';
+    if ((normalizedName.includes('can') || normalizedName.includes('tin')) && 
+        !normalizedName.includes('candy')) return 'canned';
+    if (normalizedName.includes('crisp') || normalizedName.includes('chip') || 
+        normalizedName.includes('snack') || normalizedName.includes('pretzel') || 
+        normalizedName.includes('cracker')) return 'snack';
+    if (normalizedName.includes('chocolate') || normalizedName.includes('cocoa')) return 'chocolate';
+    if (normalizedName.includes('nut') || normalizedName.includes('peanut') || 
+        normalizedName.includes('almond') || normalizedName.includes('cashew') || 
+        normalizedName.includes('walnut')) return 'nuts';
+    if (normalizedName.includes('flour')) return 'flour';
+    if (normalizedName.includes('sugar')) return 'sugar';
+    if (normalizedName.includes('oil') || normalizedName.includes('olive') || 
+        normalizedName.includes('vegetable oil') || normalizedName.includes('sunflower oil')) return 'oil';
+    
+    // Eggs
+    if (normalizedName.includes('egg') && !normalizedName.includes('eggplant')) return 'eggs';
+    
+    // Beverages
+    if (normalizedName.includes('juice') || normalizedName.includes('orange juice') || 
+        normalizedName.includes('apple juice')) return 'juice';
+    if (normalizedName.includes('soda') || normalizedName.includes('cola') || 
+        normalizedName.includes('coke') || normalizedName.includes('pepsi') || 
+        normalizedName.includes('lemonade') || normalizedName.includes('sprite')) return 'soda';
+    if (normalizedName.includes('water') || normalizedName.includes('mineral water') || 
+        normalizedName.includes('sparkling water')) return 'water';
+    if (normalizedName.includes('beer') || normalizedName.includes('ale') || 
+        normalizedName.includes('lager')) return 'beer';
+    if (normalizedName.includes('wine') || normalizedName.includes('red wine') || 
+        normalizedName.includes('white wine')) return 'wine';
+    
+    // Deli Items
+    if (normalizedName.includes('deli') || normalizedName.includes('sliced meat') || 
+        normalizedName.includes('pastrami') || normalizedName.includes('salami')) return 'deli';
     
     return 'default';
+  }
+
+  /**
+   * Advanced categorization using zero-shot classification
+   * Falls back to keyword-based categorization if AI classification fails
+   */
+  static categorizeProductWithAI(productName: string): string {
+    try {
+      // Try using AI-based classification
+      const result = ZeroShotClassificationService.classifyFood(productName);
+      
+      // If AI returned a valid subcategory, use it
+      if (result && result.subcategory && result.confidence > 0.6) {
+        // Check if this subcategory exists in our database
+        const hasCategory = SHELF_LIFE_DATABASE.some(
+          item => item.category === result.subcategory
+        );
+        
+        if (hasCategory) {
+          return result.subcategory;
+        }
+        
+        // If subcategory doesn't exist in our database but main category does,
+        // use the main category
+        if (result.mainCategory) {
+          const hasMainCategory = SHELF_LIFE_DATABASE.some(
+            item => item.category === result.mainCategory
+          );
+          
+          if (hasMainCategory) {
+            return result.mainCategory;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in AI categorization:', error);
+    }
+    
+    // Fall back to keyword-based categorization
+    return this.categorizeProduct(productName);
   }
   
   /**
    * Get shelf life information for a product
-   * This now uses the dynamic database with fallback to the static one
    */
-  static async getShelfLife(productName: string): Promise<ShelfLife> {
-    try {
-      // Try to find a match in the dynamic database
-      const match = await FoodDatabaseService.findBestMatch(productName);
-      
-      if (match) {
-        return {
-          category: match.product.category,
-          daysToExpiry: match.product.daysToExpiry,
-          storageType: match.product.storageType
-        };
-      }
-      
-      // Fallback to the original method
-      return this.legacyGetShelfLife(productName);
-    } catch (error) {
-      console.error('Error in getShelfLife:', error);
-      return this.legacyGetShelfLife(productName);
-    }
+  static getShelfLife(productName: string): ShelfLife {
+    const category = this.categorizeProduct(productName);
+    return SHELF_LIFE_DATABASE.find(item => item.category === category) || 
+           SHELF_LIFE_DATABASE.find(item => item.category === 'default')!;
   }
-  
+
   /**
-   * Legacy shelf life lookup method
+   * Get shelf life information using AI categorization
    */
-  private static legacyGetShelfLife(productName: string): ShelfLife {
-    const category = this.legacyCategorizeProduct(productName);
-    
-    // Find the shelf life data for this category
+  static getShelfLifeWithAI(productName: string): ShelfLife {
+    const category = this.categorizeProductWithAI(productName);
     return SHELF_LIFE_DATABASE.find(item => item.category === category) || 
            SHELF_LIFE_DATABASE.find(item => item.category === 'default')!;
   }
   
   /**
-   * Calculate the expiry date for a product based on its name and purchase date
+   * Calculate the expiry date for a product
    */
-  static async calculateExpiryDate(
+  static calculateExpiryDate(
     productName: string,
     purchaseDate: string
-  ): Promise<string> {
-    console.log(`Calculating expiry date for ${productName} (purchased: ${purchaseDate})`);
-    
-    // First look for exact matches in our database
-    console.log(`Looking for exact match: ${productName.toLowerCase()}`);
-    
-    if (supabase) {
-      try {
-        // Normalize the product name for better matching
-        const normalizedName = productName.toLowerCase().trim();
-        
-        // Look for exact product name match first
-        const { data: exactMatches, error: exactError } = await supabase
-          .from('receipt_items')
-          .select('name, estimated_expiry_date, purchase_date')
-          .eq('user_corrected_expiry', true)
-          .ilike('name', normalizedName)
-          .order('updated_at', { ascending: false })
-          .limit(1);
-          
-        if (!exactError && exactMatches && exactMatches.length > 0) {
-          const match = exactMatches[0];
-          console.log(`Found exact match for "${productName}": ${match.name}`);
-          
-          // Calculate how many days from purchase to expiry in the matched item
-          const purchaseDateObj = new Date(match.purchase_date);
-          const expiryDateObj = new Date(match.estimated_expiry_date);
-          const daysToExpiry = Math.round((expiryDateObj.getTime() - purchaseDateObj.getTime()) / (1000 * 60 * 60 * 24));
-          
-          console.log(`Previous correction: ${daysToExpiry} days until expiry`);
-          
-          // Apply the same shelf life to the new purchase
-          const newPurchaseDateObj = new Date(purchaseDate);
-          const newExpiryDate = addDays(newPurchaseDateObj, daysToExpiry);
-          
-          return format(newExpiryDate, 'yyyy-MM-dd');
-        }
-      } catch (err) {
-        console.error('Error checking for user corrections:', err);
-        // Continue to fallback methods
-      }
-    }
-    
-    // Try the LLM prediction if enabled
-    const USE_LLM_PREDICTION = true; // Set to false to disable LLM and use only classification
-    
-    if (USE_LLM_PREDICTION) {
-      try {
-        // Get category for additional context
-        const category = this.getCategoryFromProductName(productName);
-        
-        // Call the LLM service with product details
-        const llmPrediction = await LlmExpiryService.predictExpiryDays(
-          productName,
-          {
-            category,
-            purchaseDate,
-            isRefrigerated: this.isRefrigeratedProduct(productName),
-          }
-        );
-        
-        console.log(`LLM prediction for ${productName}: ${llmPrediction.predictedExpiryDays} days (confidence: ${llmPrediction.confidence})`);
-        console.log(`Reasoning: ${llmPrediction.reasoning}`);
-        
-        // Only use LLM prediction if confidence is high enough
-        if (llmPrediction.confidence >= 0.6) {
-          // Calculate the expiry date based on purchase date + predicted days
-          const purchaseDateObj = new Date(purchaseDate);
-          const expiryDateObj = new Date(purchaseDateObj);
-          expiryDateObj.setDate(purchaseDateObj.getDate() + llmPrediction.predictedExpiryDays);
-          
-          return expiryDateObj.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-        } else {
-          console.log(`LLM confidence too low (${llmPrediction.confidence}), falling back to classification`);
-        }
-      } catch (error) {
-        console.error('Error using LLM prediction, falling back to classification:', error);
-      }
-    }
-    
-    // Fallback to standard classification method
-    console.log('No user corrections or LLM prediction, using category-based shelf life');
-    const category = await this.categorizeProduct(productName);
-    const shelfLife = SHELF_LIFE_DATABASE.find(item => item.category === category) ||
-                      SHELF_LIFE_DATABASE.find(item => item.category === 'default')!;
-    
-    const purchaseDateTime = new Date(purchaseDate);
-    const expiryDate = addDays(purchaseDateTime, shelfLife.daysToExpiry);
-    
+  ): string {
+    const shelfLife = this.getShelfLife(productName);
+    const expiryDate = addDays(new Date(purchaseDate), shelfLife.daysToExpiry);
     return format(expiryDate, 'yyyy-MM-dd');
   }
 
   /**
-   * Update the expiry date for a product based on user feedback
-   * This method is now simplified as we use direct lookups in calculateExpiryDate
+   * Calculate the expiry date using AI categorization
    */
-  static async updateExpiryDate(
+  static calculateExpiryDateWithAI(
     productName: string,
-    originalExpiryDate: string,
-    correctedExpiryDate: string
-  ): Promise<void> {
-    try {
-      console.log('Expiry date correction recorded:', {
-        productName,
-        originalExpiryDate,
-        correctedExpiryDate
-      });
-      
-      // We no longer need complex model training logic here
-      // The correction is stored in the receipt_items table with user_corrected_expiry=true
-      // Future calculations will use these corrections directly
-    } catch (error) {
-      console.error('Error logging expiry date correction:', error);
-    }
-  }
-
-  /**
-   * Determine if a product is refrigerated based on its name
-   */
-  private static isRefrigeratedProduct(productName: string): boolean {
-    const name = productName.toLowerCase();
-    
-    // Common refrigerated items
-    if (
-      name.includes('milk') ||
-      name.includes('yogurt') ||
-      name.includes('yoghurt') ||
-      name.includes('cheese') ||
-      name.includes('butter') ||
-      name.includes('meat') ||
-      name.includes('fish') ||
-      name.includes('seafood') ||
-      name.includes('egg') ||
-      name.includes('cream')
-    ) {
-      return true;
-    }
-    
-    return false;
-  }
-
-  /**
-   * Get category from product name for additional context
-   */
-  private static getCategoryFromProductName(productName: string): string {
-    const name = productName.toLowerCase();
-    
-    if (name.includes('milk')) return 'Dairy - Milk';
-    if (name.includes('yogurt') || name.includes('yoghurt')) return 'Dairy - Yogurt';
-    if (name.includes('cheese')) return 'Dairy - Cheese';
-    if (name.includes('bread') || name.includes('loaf')) return 'Bakery - Bread';
-    if (name.includes('meat')) return 'Meat';
-    if (name.includes('chicken')) return 'Meat - Poultry';
-    if (name.includes('beef')) return 'Meat - Beef';
-    if (name.includes('pork')) return 'Meat - Pork';
-    if (name.includes('fish')) return 'Seafood';
-    if (name.includes('apple') || name.includes('banana') || name.includes('fruit')) return 'Fruit';
-    if (name.includes('vegetable') || name.includes('carrot') || name.includes('potato')) return 'Vegetables';
-    if (name.includes('egg')) return 'Eggs';
-    if (name.includes('chocolate')) return 'Confectionery';
-    
-    return 'General Grocery';
+    purchaseDate: string
+  ): string {
+    const shelfLife = this.getShelfLifeWithAI(productName);
+    const expiryDate = addDays(new Date(purchaseDate), shelfLife.daysToExpiry);
+    return format(expiryDate, 'yyyy-MM-dd');
   }
 } 
