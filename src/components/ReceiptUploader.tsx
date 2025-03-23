@@ -75,7 +75,6 @@ export default function ReceiptUploader() {
     <div className="w-full">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Upload Receipt</h2>
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-700 cursor-pointer flex items-center">
               <input

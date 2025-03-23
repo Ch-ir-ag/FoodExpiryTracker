@@ -48,6 +48,14 @@ export default function Navbar() {
               >
                 How it Works
               </button>
+              {user && (
+                <Link
+                  href="/premium"
+                  className="text-blue-600 hover:text-blue-800 px-3 py-2 text-sm font-medium"
+                >
+                  Go Premium ✨
+                </Link>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-4">

@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import { StripeService } from '@/services/stripeService';
 import { getSupabase } from '@/lib/supabase';
+import Stripe from 'stripe';
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+});
 
 export async function POST(req: Request) {
   try {
     // Extract data from the request
-    const { priceId, successUrl, cancelUrl } = await req.json();
+    const { priceId, successUrl, cancelUrl, email } = await req.json();
     
     if (!priceId || !successUrl || !cancelUrl) {
       return new NextResponse(
@@ -14,26 +20,38 @@ export async function POST(req: Request) {
       );
     }
     
-    // Get the current user from Supabase
-    const supabase = getSupabase();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+    // Try to get the user from Supabase if they're logged in
+    let userId = null;
+    try {
+      const supabase = getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id;
+        console.log('User is authenticated:', userId);
+      }
+    } catch (error) {
+      console.log('Not authenticated, continuing with guest checkout');
     }
     
-    // Create a checkout session
-    const session = await StripeService.createCheckoutSession(
-      user.id,
-      priceId,
-      successUrl,
-      cancelUrl
-    );
+    // Create checkout session (works for both logged-in and guest users)
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_email: email || undefined, // Use the user's email if available
+      metadata: {
+        userId: userId || 'guest', // Track if this was a logged-in user
+      },
+    });
     
-    // Return the session ID to the client
+    // Return the session details to the client
     return new NextResponse(
       JSON.stringify({ 
         sessionId: session.id,

@@ -3,16 +3,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 let supabaseInstance: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
-  if (supabaseInstance) return supabaseInstance;
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // Add debug logging
-  console.log('Initializing Supabase with:', {
-    url: supabaseUrl ? 'defined' : 'undefined',
-    key: supabaseAnonKey ? 'defined' : 'undefined'
-  });
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
@@ -25,9 +17,20 @@ export function getSupabase(): SupabaseClient {
     );
   }
 
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
-  console.log('Supabase client initialized successfully');
-  return supabaseInstance;
+  // For client components, reuse the instance
+  if (typeof window !== 'undefined') {
+    if (supabaseInstance) return supabaseInstance;
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    return supabaseInstance;
+  }
+
+  // For server components, create a new instance without cookies
+  // since cookies() from next/headers is not compatible with pages/ directory
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+    }
+  });
 }
 
 // For backward compatibility
