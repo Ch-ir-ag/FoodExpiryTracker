@@ -1,17 +1,13 @@
 'use client';
 
 import { Crown, CheckCircle, Lock, Zap, Utensils, Calendar, Receipt, LineChart } from 'lucide-react';
-import SubscriptionButton from '@/components/SubscriptionButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
+import Script from 'next/script';
 
 export default function PremiumPage() {
   const { user, loading } = useAuth();
   const [isClient, setIsClient] = useState(false);
-  
-  // Using a proper Stripe price ID instead of a button ID
-  // Stripe price IDs start with 'price_' not 'buy_btn_'
-  const premiumPriceId = 'price_1R5pIuAo8cvZCXlJqcN9JlcK';
   
   // Set isClient to true after component mounts
   useEffect(() => {
@@ -24,6 +20,8 @@ export default function PremiumPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-br from-blue-50 to-white">
+      <Script async src="https://js.stripe.com/v3/buy-button.js" />
+      
       <div className="max-w-5xl mx-auto">
         {user && (
           <div className="bg-blue-50 p-4 rounded-lg mb-8 text-center">
@@ -185,10 +183,19 @@ export default function PremiumPage() {
               </li>
             </ul>
             
-            <SubscriptionButton 
-              priceId={premiumPriceId} 
-              buttonText="Upgrade to Premium" 
-              className="w-full py-3 text-lg"
+            <div className="w-full" 
+                 id="stripe-buy-button-container"
+                 ref={(el) => {
+                   if (el && isClient) {
+                     el.innerHTML = `
+                       <stripe-buy-button
+                         buy-button-id="buy_btn_1R5pGOAo8cvZCXlJvGM0K8c2"
+                         publishable-key="pk_live_51R5oAnAo8cvZCXlJ69o5ltKKDlWsQPlw7L4A44oJ4ghKDtagulnrKJ0vCEd7ZkfGuObiQreaAf9OiD5ZuHvFNm0N00fanB5iKh"
+                       >
+                       </stripe-buy-button>
+                     `;
+                   }
+                 }}
             />
             
             <p className="text-center text-sm text-gray-500 mt-4">
