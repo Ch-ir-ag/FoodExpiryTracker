@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
 import { StripeService } from '@/services/stripeService';
-import { getSupabase } from '@/lib/supabase';
+import { getSupabase, getSupabaseAdmin } from '@/lib/supabase';
 import Stripe from 'stripe';
-
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+import { stripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
@@ -48,7 +44,23 @@ export async function POST(req: Request) {
       customer_email: email || undefined, // Use the user's email if available
       metadata: {
         userId: userId || 'guest', // Track if this was a logged-in user
+        source: 'webapp',
+        version: '1.0'
       },
+      subscription_data: {
+        metadata: {
+          userId: userId || 'guest', // Also add to subscription for webhook processing
+          source: 'webapp',
+          version: '1.0'
+        },
+      },
+    });
+    
+    // Log the checkout session for debugging
+    console.log('Created checkout session:', {
+      sessionId: session.id,
+      userId: userId || 'guest',
+      metadata: session.metadata
     });
     
     // Return the session details to the client

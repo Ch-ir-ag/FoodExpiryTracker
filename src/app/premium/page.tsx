@@ -2,22 +2,174 @@
 
 import { Crown, CheckCircle, Lock, Zap, Utensils, Calendar, Receipt, LineChart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Script from 'next/script';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function PremiumPage() {
-  const { user, loading } = useAuth();
+  const router = useRouter();
+  const { user, loading, isPremium, premiumLoading, checkSubscriptionStatus } = useAuth();
   const [isClient, setIsClient] = useState(false);
+  
+  // Add a refresh limiter to prevent excessive API calls
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
+  const REFRESH_COOLDOWN_MS = 10000; // 10 seconds minimum between refreshes
+
+  const safeCheckSubscription = useCallback(() => {
+    const currentTime = Date.now();
+    if (currentTime - lastRefreshTime < REFRESH_COOLDOWN_MS) {
+      console.log('Subscription check throttled - too soon since last check');
+      return;
+    }
+    
+    setLastRefreshTime(currentTime);
+    checkSubscriptionStatus();
+  }, [lastRefreshTime, checkSubscriptionStatus]);
   
   // Set isClient to true after component mounts
   useEffect(() => {
     setIsClient(true);
   }, []);
   
-  if (!isClient) {
-    return <div className="min-h-screen pt-24 pb-16 px-4">Loading...</div>;
+  // Check subscription status on mount
+  useEffect(() => {
+    if (user && isClient) {
+      // Check subscription status immediately
+      console.log('Initial subscription status check');
+      safeCheckSubscription();
+      
+      // Set up interval to recheck occasionally
+      const interval = setInterval(() => {
+        console.log('Periodic subscription status check');
+        safeCheckSubscription();
+      }, 5 * 60 * 1000); // Every 5 minutes
+      
+      return () => clearInterval(interval);
+    }
+  }, [user, isClient, safeCheckSubscription]);
+  
+  // Force a subscription check after redirect from Stripe
+  useEffect(() => {
+    if (user && isClient) {
+      // Check if we're returning from a payment flow - URL might contain a session_id or setup_intent parameter
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('session_id') || params.has('setup_intent')) {
+        console.log('Detected return from payment flow, checking subscription status');
+        // Wait a moment to ensure webhook has time to process
+        setTimeout(() => {
+          safeCheckSubscription();
+        }, 2000);
+      }
+    }
+  }, [user, isClient, safeCheckSubscription]);
+  
+  // Show loading state if any loading is happening
+  if (!isClient || loading || premiumLoading) {
+    return <div className="min-h-screen pt-24 pb-16 px-4 flex items-center justify-center">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">Loading subscription information...</p>
+      </div>
+    </div>;
+  }
+  
+  // If user already has premium, show different content
+  if (isPremium) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="bg-white p-8 rounded-xl shadow-md border border-green-100 mb-8">
+            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 text-green-600 mb-4">
+              <CheckCircle size={32} />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              You're a Premium Member!
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Thank you for subscribing to Expiroo Premium. You now have access to all premium features.
+            </p>
+            <button 
+              onClick={() => router.push('/dashboard')}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Manage Your Subscription</h2>
+            <p className="text-gray-600 mb-4">
+              Need to update your payment method or cancel your subscription? 
+              You can manage your subscription settings directly from our customer portal.
+            </p>
+            <button 
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/stripe/create-portal-session', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      returnUrl: `${window.location.origin}/premium`,
+                    }),
+                    credentials: 'include',
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create portal session');
+                  }
+                  
+                  window.location.href = data.url;
+                } catch (error) {
+                  console.error('Error accessing customer portal:', error);
+                  toast.error('Unable to access customer portal. Please try again later.');
+                }
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Manage Subscription
+            </button>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Premium Benefits</h2>
+            <ul className="space-y-3 text-left">
+              <li className="flex">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Unlimited Receipt Uploads</span>
+              </li>
+              <li className="flex">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">AI-Powered Expiry Prediction</span>
+              </li>
+              <li className="flex">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Food Waste Analytics</span>
+              </li>
+              <li className="flex">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Dynamic Food Recipes</span>
+              </li>
+              <li className="flex">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Advanced Calendar View</span>
+              </li>
+              <li className="flex">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">Priority Support</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
   }
 
+  // Regular premium sign-up page for non-premium users
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-br from-slate-50 to-white">
       <Script async src="https://js.stripe.com/v3/buy-button.js" />

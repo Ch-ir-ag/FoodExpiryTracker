@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS receipt_items (
 -- 2. ENABLE ROW LEVEL SECURITY
 ALTER TABLE receipts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE receipt_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_trials ENABLE ROW LEVEL SECURITY;
 
 -- 3. DROP ALL EXISTING POLICIES (Clean slate)
 DROP POLICY IF EXISTS "Users can view their own receipts" ON receipts;
@@ -42,6 +44,14 @@ DROP POLICY IF EXISTS "Users can view their own receipt items" ON receipt_items;
 DROP POLICY IF EXISTS "Users can insert their own receipt items" ON receipt_items;
 DROP POLICY IF EXISTS "Users can update their own receipt items" ON receipt_items;
 DROP POLICY IF EXISTS "Users can delete their own receipt items" ON receipt_items;
+
+DROP POLICY IF EXISTS "Users can view their own subscriptions" ON subscriptions;
+DROP POLICY IF EXISTS "Users can update their own subscriptions" ON subscriptions;
+DROP POLICY IF EXISTS "Service role can manage all subscriptions" ON subscriptions;
+
+DROP POLICY IF EXISTS "Users can view their own trials" ON user_trials;
+DROP POLICY IF EXISTS "Users can update their own trials" ON user_trials;
+DROP POLICY IF EXISTS "Service role can manage all trials" ON user_trials;
 
 -- 4. DROP ALL TRIGGERS AND FUNCTIONS RELATED TO MANUAL DATE ADJUSTMENT
 DROP TRIGGER IF EXISTS handle_expiry_correction ON receipt_items;
@@ -92,5 +102,20 @@ ON receipt_items FOR DELETE USING (
   receipt_id IN (SELECT id FROM receipts WHERE user_id = auth.uid())
 );
 
--- 7. CLEAN UP ANY DEBUGGING TABLES
+-- 7. CREATE RLS POLICIES FOR SUBSCRIPTIONS 
+-- These allow users to view their own subscriptions and service role to manage all subscriptions
+CREATE POLICY "Users can view their own subscriptions"
+ON subscriptions FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Service role can manage all subscriptions"
+ON subscriptions USING ((auth.jwt() ->> 'role') = 'service_role');
+
+-- 8. CREATE RLS POLICIES FOR USER TRIALS
+CREATE POLICY "Users can view their own trials"
+ON user_trials FOR SELECT USING (user_id = auth.uid());  
+
+CREATE POLICY "Service role can manage all trials"
+ON user_trials USING ((auth.jwt() ->> 'role') = 'service_role');
+
+-- 9. CLEAN UP ANY DEBUGGING TABLES
 DROP TABLE IF EXISTS update_logs; 
