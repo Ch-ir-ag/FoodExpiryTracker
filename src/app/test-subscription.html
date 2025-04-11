@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Test Tool</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #0051a8;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        pre {
+            background: #eee;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 400px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Subscription Test Tool</h1>
+    
+    <div class="card">
+        <h2>Current User</h2>
+        <div id="userInfo">Loading...</div>
+        <button onclick="refreshUser()">Refresh User</button>
+    </div>
+
+    <div class="card">
+        <h2>Check Subscription Status</h2>
+        <button onclick="checkSubscription()">Check Subscription Status</button>
+        <div id="subscriptionStatus"></div>
+    </div>
+
+    <div class="card">
+        <h2>Create Subscription Manually</h2>
+        <div>
+            <label for="userId">User ID:</label>
+            <input type="text" id="userId" placeholder="User ID from above">
+        </div>
+        <div>
+            <label for="customerId">Stripe Customer ID:</label>
+            <input type="text" id="customerId" placeholder="cus_...">
+        </div>
+        <div>
+            <label for="subscriptionId">Stripe Subscription ID:</label>
+            <input type="text" id="subscriptionId" placeholder="sub_...">
+        </div>
+        <div>
+            <label for="status">Status:</label>
+            <input type="text" id="status" value="active">
+        </div>
+        <button onclick="createSubscription()">Create Subscription</button>
+        <div id="createResult"></div>
+    </div>
+
+    <div class="card">
+        <h2>Run SQL Script</h2>
+        <textarea id="sqlScript" rows="10">-- Enter your SQL here
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id),
+    stripe_customer_id TEXT NOT NULL,
+    stripe_subscription_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
+-- More permissive policies for troubleshooting
+DROP POLICY IF EXISTS "Anyone can read subscriptions temporarily" ON subscriptions;
+CREATE POLICY "Anyone can read subscriptions temporarily"
+ON subscriptions FOR SELECT
+USING (auth.role() = 'authenticated');</textarea>
+        <button onclick="runSql()">Run SQL</button>
+        <div id="sqlResult"></div>
+    </div>
+
+    <div class="card">
+        <h2>View Database Tables</h2>
+        <button onclick="checkTables()">Check Tables</button>
+        <div id="tablesResult"></div>
+    </div>
+
+    <script>
+        // Get current user
+        async function refreshUser() {
+            try {
+                const userInfoDiv = document.getElementById('userInfo');
+                userInfoDiv.textContent = 'Loading...';
+                
+                const response = await fetch('/api/auth/session');
+                if (!response.ok) {
+                    userInfoDiv.innerHTML = '<div class="error">Error fetching user: ' + response.status + '</div>';
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data && data.user) {
+                    const user = data.user;
+                    userInfoDiv.innerHTML = `
+                        <pre>${JSON.stringify(user, null, 2)}</pre>
+                        <button onclick="copyToClipboard('${user.id}')">Copy User ID</button>
+                    `;
+                    
+                    // Auto-fill the user ID field
+                    document.getElementById('userId').value = user.id;
+                } else {
+                    userInfoDiv.innerHTML = '<div class="error">Not logged in</div>';
+                }
+            } catch (error) {
+                document.getElementById('userInfo').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Check subscription status
+        async function checkSubscription() {
+            try {
+                const statusDiv = document.getElementById('subscriptionStatus');
+                statusDiv.innerHTML = 'Checking...';
+                
+                const response = await fetch('/api/stripe/check-subscription', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                statusDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('subscriptionStatus').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Create subscription
+        async function createSubscription() {
+            try {
+                const resultDiv = document.getElementById('createResult');
+                resultDiv.innerHTML = 'Creating...';
+                
+                const userId = document.getElementById('userId').value;
+                const customerId = document.getElementById('customerId').value;
+                const subscriptionId = document.getElementById('subscriptionId').value;
+                const status = document.getElementById('status').value;
+                
+                if (!userId || !customerId || !subscriptionId) {
+                    resultDiv.innerHTML = '<div class="error">All fields are required</div>';
+                    return;
+                }
+                
+                const response = await fetch('/api/stripe/create-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId,
+                        customerId,
+                        subscriptionId,
+                        status
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">Subscription created!</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Error creating subscription</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                document.getElementById('createResult').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Run SQL
+        async function runSql() {
+            try {
+                const resultDiv = document.getElementById('sqlResult');
+                resultDiv.innerHTML = 'Running SQL...';
+                
+                const sql = document.getElementById('sqlScript').value;
+                
+                if (!sql) {
+                    resultDiv.innerHTML = '<div class="error">SQL script is required</div>';
+                    return;
+                }
+                
+                // Note: This endpoint would need to be created
+                const response = await fetch('/api/admin/run-sql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sql })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">SQL executed successfully</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Error executing SQL</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                document.getElementById('sqlResult').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Check tables
+        async function checkTables() {
+            try {
+                const resultDiv = document.getElementById('tablesResult');
+                resultDiv.innerHTML = 'Checking tables...';
+                
+                // Note: This endpoint would need to be created
+                const response = await fetch('/api/admin/check-tables');
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Error checking tables</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                document.getElementById('tablesResult').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Helper to copy text to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard: ' + text);
+        }
+
+        // Load user data when page loads
+        document.addEventListener('DOMContentLoaded', refreshUser);
+    </script>
+</body>
+</html> 

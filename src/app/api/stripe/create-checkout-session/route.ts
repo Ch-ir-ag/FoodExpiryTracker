@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { StripeService } from '@/services/stripeService';
-import { getSupabase, getSupabaseAdmin } from '@/lib/supabase';
-import Stripe from 'stripe';
+import { getSupabase } from '@/lib/supabase';
 import { stripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
     // Extract data from the request
-    const { priceId, successUrl, cancelUrl, email } = await req.json();
+    const { priceId, successUrl, cancelUrl } = await req.json();
     
     if (!priceId || !successUrl || !cancelUrl) {
       return new NextResponse(
@@ -16,20 +15,19 @@ export async function POST(req: Request) {
       );
     }
     
-    // Try to get the user from Supabase if they're logged in
-    let userId = null;
-    try {
-      const supabase = getSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        userId = user.id;
-        console.log('User is authenticated:', userId);
-      }
-    } catch (error) {
-      console.log('Not authenticated, continuing with guest checkout');
-    }
+    // Get the authenticated user from Supabase
+    const supabase = getSupabase();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    // Create checkout session (works for both logged-in and guest users)
+    if (userError || !user) {
+      console.error('Error getting user:', userError);
+      return new NextResponse(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create checkout session with user metadata
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -41,41 +39,26 @@ export async function POST(req: Request) {
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      customer_email: email || undefined, // Use the user's email if available
+      customer_email: user.email,
       metadata: {
-        userId: userId || 'guest', // Track if this was a logged-in user
-        source: 'webapp',
-        version: '1.0'
+        userId: user.id,
       },
       subscription_data: {
+        trial_period_days: 3, // 3-day trial
         metadata: {
-          userId: userId || 'guest', // Also add to subscription for webhook processing
-          source: 'webapp',
-          version: '1.0'
+          userId: user.id,
         },
       },
     });
-    
-    // Log the checkout session for debugging
-    console.log('Created checkout session:', {
-      sessionId: session.id,
-      userId: userId || 'guest',
-      metadata: session.metadata
+
+    return new NextResponse(JSON.stringify({ sessionId: session.id, url: session.url }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
-    
-    // Return the session details to the client
-    return new NextResponse(
-      JSON.stringify({ 
-        sessionId: session.id,
-        url: session.url 
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating checkout session:', error);
     return new NextResponse(
-      JSON.stringify({ error: error.message || 'Failed to create checkout session' }),
+      JSON.stringify({ error: 'Error creating checkout session' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

@@ -56,10 +56,36 @@ export default function PremiumPage() {
       const params = new URLSearchParams(window.location.search);
       if (params.has('session_id') || params.has('setup_intent')) {
         console.log('Detected return from payment flow, checking subscription status');
-        // Wait a moment to ensure webhook has time to process
-        setTimeout(() => {
-          safeCheckSubscription();
-        }, 2000);
+        
+        // First try our manual sync endpoint
+        fetch('/api/stripe/sync-subscription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Manual sync response:', data);
+          if (data.success) {
+            // Refresh the UI with the new subscription data
+            safeCheckSubscription();
+          } else {
+            // If manual sync fails, fall back to the regular check
+            // Wait a moment to ensure webhook has time to process
+            setTimeout(() => {
+              safeCheckSubscription();
+            }, 2000);
+          }
+        })
+        .catch(error => {
+          console.error('Error in manual sync:', error);
+          // Fall back to the regular check
+          setTimeout(() => {
+            safeCheckSubscription();
+          }, 2000);
+        });
       }
     }
   }, [user, isClient, safeCheckSubscription]);
