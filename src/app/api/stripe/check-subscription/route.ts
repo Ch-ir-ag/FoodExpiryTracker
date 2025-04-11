@@ -1,50 +1,43 @@
 import { NextResponse } from 'next/server';
-import { getSupabase, getSupabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { stripe } from '@/lib/stripe';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function GET(req: Request) {
+  console.log('Starting check-subscription API call');
+  const cookieStore = cookies();
+  
   try {
-    // Get the user from Supabase
-    const supabase = getSupabase();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    // Use createRouteHandlerClient to properly get user session from cookies
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+
     if (authError) {
-      console.error('Auth error in check-subscription:', authError.message);
-      // Don't return 401, return isPremium: false with 200 to prevent continuous retries
-      return NextResponse.json({ 
-        isPremium: false, 
-        message: 'Authentication required'
-      }, { status: 200 });
+      console.error('Auth error getting session in check-subscription:', authError.message);
+      return NextResponse.json({ isPremium: false, message: 'Authentication error' }, { status: 200 });
+    }
+
+    if (!session || !session.user) {
+      console.log('No active session found in check-subscription');
+      return NextResponse.json({ isPremium: false, message: 'Not authenticated' }, { status: 200 });
     }
     
-    if (!user) {
-      // Don't return 401, return isPremium: false with 200 to prevent continuous retries
-      return NextResponse.json({ 
-        isPremium: false, 
-        message: 'Not authenticated'
-      }, { status: 200 });
-    }
-    
+    const user = session.user;
     console.log('Checking subscription status via API for user:', user.id);
-    
-    // First attempt: Check Supabase database directly using admin client
+
+    // Use admin client for database checks
     const supabaseAdmin = getSupabaseAdmin();
     const { data: subscription, error: subError } = await supabaseAdmin
       .from('subscriptions')
-      .select('*')
+      .select('status, stripe_subscription_id, stripe_customer_id') // Select specific columns
       .eq('user_id', user.id)
-      .single();
-    
-    // If no subscription found and no error
-    if (subError && subError.code === 'PGRST116') {
-      console.log('No subscription found in database for user:', user.id);
-    } else if (subError) {
-      console.error('Error checking subscription in database:', subError);
-    } else if (subscription) {
-      // Check if subscription is active
-      const isActive = ['active', 'trialing'].includes(subscription.status);
-      console.log(`Found subscription status: ${subscription.status}, isActive: ${isActive}`);
-      
+      .maybeSingle(); // Use maybeSingle to handle no rows gracefully
+
+    // If subscription found in DB
+    if (subscription) {
+      const isActive = ['active', 'trialing', 'past_due'].includes(subscription.status);
+      console.log(`DB Check: Found subscription status: ${subscription.status}, isActive: ${isActive}`);
       return NextResponse.json({ 
         isPremium: isActive,
         status: subscription.status,
@@ -52,18 +45,23 @@ export async function GET(req: Request) {
       });
     }
     
+    // Handle case where no subscription found in DB
+    if (subError && subError.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('DB Check: Error checking subscription in database:', subError);
+        // Fall through to Stripe check, maybe DB is out of sync
+    } else {
+       console.log('DB Check: No subscription found in database for user:', user.id);
+    }
+
     // Second attempt: Check with Stripe directly
     try {
-      // Find customer associated with this user
-      const { data: customerData } = await supabaseAdmin
-        .from('subscriptions')
-        .select('stripe_customer_id')
-        .eq('user_id', user.id);
-      
-      if (customerData && customerData.length > 0) {
-        const customerId = customerData[0].stripe_customer_id;
+      console.log('Stripe Check: Looking for customer by email:', user.email);
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+
+      if (customers.data.length > 0) {
+        const customerId = customers.data[0].id;
+        console.log(`Stripe Check: Found customer ${customerId} by email.`);
         
-        // Get subscriptions for this customer
         const stripeSubscriptions = await stripe.subscriptions.list({
           customer: customerId,
           status: 'all',
@@ -72,38 +70,42 @@ export async function GET(req: Request) {
         
         if (stripeSubscriptions.data.length > 0) {
           const latestSubscription = stripeSubscriptions.data[0];
-          const isActive = ['active', 'trialing'].includes(latestSubscription.status);
+          const isActive = ['active', 'trialing', 'past_due'].includes(latestSubscription.status);
+          console.log(`Stripe Check: Found subscription ${latestSubscription.id}, status: ${latestSubscription.status}, isActive: ${isActive}`);
           
-          console.log(`Found subscription in Stripe: ${latestSubscription.id}, status: ${latestSubscription.status}`);
-          
-          // Update our database with this information
-          await supabaseAdmin
-            .from('subscriptions')
-            .upsert({
-              user_id: user.id,
-              stripe_customer_id: customerId,
-              stripe_subscription_id: latestSubscription.id,
-              status: latestSubscription.status,
-              updated_at: new Date().toISOString()
-            });
+          // Try to sync this back to our database
+          const { error: syncError } = await supabaseAdmin.rpc('sync_stripe_subscription', {
+            p_user_id: user.id,
+            p_stripe_customer_id: customerId,
+            p_stripe_subscription_id: latestSubscription.id,
+            p_status: latestSubscription.status
+          });
+          if (syncError) {
+            console.error('Stripe Check: Error syncing subscription found in Stripe:', syncError);
+            // Still return the status found in Stripe
+          }
             
           return NextResponse.json({ 
             isPremium: isActive,
             status: latestSubscription.status,
             subscriptionId: latestSubscription.id
           });
+        } else {
+           console.log(`Stripe Check: No subscriptions found for customer ${customerId}.`);
         }
+      } else {
+         console.log(`Stripe Check: No customer found for email ${user.email}.`);
       }
     } catch (stripeError) {
-      console.error('Error checking with Stripe API:', stripeError);
+      console.error('Stripe Check: Error checking with Stripe API:', stripeError);
     }
     
     // Default fallback: User is not premium
-    return NextResponse.json({ isPremium: false });
+    console.log('Fallback: Returning isPremium: false');
+    return NextResponse.json({ isPremium: false, message: 'No active subscription found' }, { status: 200 });
     
   } catch (error) {
-    console.error('Error in subscription check API:', error);
-    // Return 200 with isPremium: false instead of error to prevent endless retries
+    console.error('Error in check-subscription API:', error);
     return NextResponse.json({ 
       isPremium: false, 
       message: 'Failed to check subscription status' 
